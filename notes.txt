@@ -1,3 +1,13 @@
+dungeon-difficulty: easy / hard etc
+dungenon-id -
+dungeon-name - Boss name etc
+requirement: (requires particular permission)
+reward: 
+    one: 5 keys
+    two: 6 keys # 3 each (cause is harder)
+
+
+wave-count: x
 waves:
     wave1:
         zombie: - minecraft:(name)
@@ -5,20 +15,4 @@ waves:
             amount: 3
             weapon: *optional*
             damage: 3
-        skeleton:
-            health: 20
-            amount: 3
-            weapon: *optional*
-            damage: 3
-        spider:
-            health: 20
-            amount: 3
-            weapon: *optional*
-            damage: 3
-        witch:
-            health: 20
-            amount: 3
-            weapon: *optional*
-            damage: 3
-
-
+   
