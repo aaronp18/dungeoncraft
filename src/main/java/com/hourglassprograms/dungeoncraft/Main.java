@@ -77,6 +77,27 @@ public class Main extends JavaPlugin {
                 }
 
             }
+            // * Starts dungeon - <dungeon name> <difficulty multiplyer/easy or hard>
+            else if (cmd.getName().equalsIgnoreCase("start-dungeon")) {
+                if (player.hasPermission("dungeoncraft.start")) { // Must have permission
+                    // Makes sure correct amount of arguments
+                    if (args.length == 2) {
+                        player.sendMessage(ChatColor.BOLD + "Starting dungeon...");
+                        startDungeon(args[0], args[1], player);
+                        // Creates new dungeon config
+                        return true;
+                    } else {
+                        // Incorrect amount of args
+                        return false;
+                    }
+                    // Creates Dungeon
+
+                } else {
+                    player.sendMessage(ChatColor.BOLD + "You do not have the perms to do this");
+                    return true;
+                }
+
+            }
 
         } else {
             getLogger().info("You must send via a player");
@@ -84,6 +105,50 @@ public class Main extends JavaPlugin {
 
         return false;
 
+    }
+
+    private void startDungeon(String dungeonName, String difficulty, Player player) {
+        // Checks if theres an avaible Arena
+        String arenaID = findAvailableArena(dungeonName);
+
+        // Converts difficulty to multiplyer
+        Double difficultyMultiplyer = convertDifficulty(difficulty);
+        player.sendMessage(ChatColor.BOLD + "Joining arena " + arenaID + "...");
+        // Tps Players to arena
+        // Gets location
+        player.teleport(getLocation(arenaID));
+        // Creates DungeonTask
+
+    }
+
+    // * Gets the center location of the arena
+    private Location getLocation(String arenaID) {
+        FileConfiguration config = this.getConfig();
+        String prefix = "arenas." + arenaID + ".";
+
+        // config.getString(prefix + "world"),
+        return new Location(Bukkit.getServer().getWorld(config.getString(prefix + "world")),
+                config.getDouble(prefix + "x"), config.getDouble(prefix + "y"), config.getDouble(prefix + "z"));
+
+    }
+
+    // * Finds any availabe arena for dungeon
+    private String findAvailableArena(String dungeonName) {
+        return "335dd1fa-01a1-43e8-a207-a37e65ef3f5f"; // ! Add Findavaialbe
+
+    }
+
+    // *Converts "Easy" "Hard" to difficulty values
+    private Double convertDifficulty(String difficulty) {
+        if (difficulty.equalsIgnoreCase("easy")) {
+            return 1.0;
+        } else if (difficulty.equalsIgnoreCase("hard")) {
+            return 2.0;
+        } else if (isNumeric(difficulty)) {
+            return Double.parseDouble(difficulty);
+
+        }
+        return 1.0;
     }
 
     // *Creates arena based on location
@@ -100,6 +165,7 @@ public class Main extends JavaPlugin {
             Location locale = player.getLocation();
 
             // Saves Location
+            config.set(prefix + "world", locale.getWorld());
             config.set(prefix + "x", locale.getX());
             config.set(prefix + "y", locale.getY());
             config.set(prefix + "z", locale.getZ());
@@ -134,4 +200,16 @@ public class Main extends JavaPlugin {
         this.saveConfig();
     }
 
+    // *Checks if string is a number
+    public boolean isNumeric(String strNum) {
+        if (strNum == null) {
+            return false;
+        }
+        try {
+            double d = Integer.parseInt(strNum);
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+        return true;
+    }
 }
