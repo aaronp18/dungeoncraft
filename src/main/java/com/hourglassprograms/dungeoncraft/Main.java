@@ -60,11 +60,15 @@ public class Main extends JavaPlugin {
             else if (cmd.getName().equalsIgnoreCase("create-arena")) {
                 if (player.hasPermission("dungeoncraft.createarena")) { // Must have permission
                     // Makes sure correct amount of arguments
-                    player.sendMessage(ChatColor.BOLD + "Creating Arena From your postion...");
-                    createArena(args[0], player);
-                    // Creates new dungeon config
-                    return true;
-
+                    if (args.length == 1) {
+                        player.sendMessage(ChatColor.BOLD + "Creating Arena From your postion...");
+                        createArena(args[0], player);
+                        // Creates new dungeon config
+                        return true;
+                    } else {
+                        // Incorrect amount of args
+                        return false;
+                    }
                     // Creates Dungeon
 
                 } else {
@@ -83,15 +87,15 @@ public class Main extends JavaPlugin {
     }
 
     // *Creates arena based on location
-    private void createArena(String name, Player player) {
+    private void createArena(String dungeonName, Player player) {
 
         FileConfiguration config = this.getConfig();
 
-        // Checks if dungeon exits
-        if (config.contains("dungeons." + name)) {
+        // Checks if dungeon exists
+        if (config.contains("dungeons." + dungeonName)) {
             String ID = UUID.randomUUID().toString();
             String prefix = "arenas." + ID + "."; // Make multiple arenas per dungeon
-            config.set(prefix + "dungeon-name", name);
+            config.set(prefix + "dungeon-name", dungeonName);
             // Gets location
             Location locale = player.getLocation();
 
@@ -100,7 +104,9 @@ public class Main extends JavaPlugin {
             config.set(prefix + "y", locale.getY());
             config.set(prefix + "z", locale.getZ());
             // Creates new arena in config
+
             this.saveConfig();
+            player.sendMessage(ChatColor.BOLD + "Arena created (" + dungeonName + ") with ID: " + ID);
         } else {
             player.sendMessage(ChatColor.BOLD + "Dungeon not found, use /list-dungeons to get the list");
             return;
