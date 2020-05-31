@@ -19,3 +19,8 @@ commands:
     permission: dungeoncraft.start-dungeon
     permission-message: You do not have permission to use this command.
     usage: "Usage: /<command> <dungeon name> <difficulty>"
+  dc-reload:
+    description: "Use this to reload config"
+    permission: dungeoncraft.reload
+    permission-message: You do not have permission to use this command.
+    usage: "Usage: /<command>"

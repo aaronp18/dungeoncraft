@@ -100,6 +100,23 @@ public class Main extends JavaPlugin {
                 }
 
             }
+            // * Reloads config from disk
+            else if (cmd.getName().equalsIgnoreCase("dc-reload")) {
+                if (player.hasPermission("dungeoncraft.reload")) { // Must have permission
+
+                    player.sendMessage(ChatColor.BOLD + "Reloading the DungeonCraft config...");
+                    this.reloadConfig();
+                    // Creates new dungeon config
+                    return true;
+
+                    // Creates Dungeon
+
+                } else {
+                    player.sendMessage(ChatColor.BOLD + "You do not have the perms to do this");
+                    return true;
+                }
+
+            }
 
         } else {
             getLogger().info("You must send via a player");
@@ -144,13 +161,13 @@ public class Main extends JavaPlugin {
     private String findAvailableArena(String dungeonName) {
         FileConfiguration config = this.getConfig();
         // Get all arenas
-        ConfigurationSection arenas = this.getConfig().getConfigurationSection("arenas");
+        ConfigurationSection arenas = config.getConfigurationSection("arenas");
 
         Set<String> ids = arenas.getKeys(false);
 
         // Iterate through and comapare dungeon name
         for (String id : ids) {
-            if (dungeonName == arenas.getString(id + ".dungeon-name")) {
+            if (dungeonName.equals(config.getString("arenas." + id + ".dungeon-name"))) {
                 // Then is usable
                 return id;
                 // ! Checks if its not being used TO DO
