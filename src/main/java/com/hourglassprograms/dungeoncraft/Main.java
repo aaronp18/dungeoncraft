@@ -113,7 +113,8 @@ public class Main extends JavaPlugin {
 
         // Converts difficulty to multiplyer
         Double difficultyMultiplyer = convertDifficulty(difficulty);
-        player.sendMessage(ChatColor.BOLD + "Joining arena " + arenaID + "...");
+        player.sendMessage(ChatColor.BOLD + "Joining arena " + arenaID + " on difficulty multiplyer of: "
+                + difficultyMultiplyer.toString() + "...");
         // Tps Players to arena
         // Gets location
         player.teleport(getLocation(arenaID));
