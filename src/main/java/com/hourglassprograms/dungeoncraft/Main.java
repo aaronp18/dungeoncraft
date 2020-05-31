@@ -1,6 +1,7 @@
 package com.hourglassprograms.dungeoncraft;
 
 import java.util.HashMap;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -8,6 +9,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -110,16 +112,21 @@ public class Main extends JavaPlugin {
     private void startDungeon(String dungeonName, String difficulty, Player player) {
         // Checks if theres an avaible Arena
         String arenaID = findAvailableArena(dungeonName);
+        if (arenaID != null) {
 
-        // Converts difficulty to multiplyer
-        Double difficultyMultiplyer = convertDifficulty(difficulty);
-        player.sendMessage(ChatColor.BOLD + "Joining arena " + arenaID + " on difficulty multiplyer of: "
-                + difficultyMultiplyer.toString() + "...");
-        // Tps Players to arena
-        // Gets location
-        player.teleport(getLocation(arenaID));
-        // Creates DungeonTask
-
+            // Converts difficulty to multiplyer
+            Double difficultyMultiplyer = convertDifficulty(difficulty);
+            player.sendMessage(ChatColor.BOLD + "Teleporting to arena " + arenaID + " on difficulty multiplyer of: "
+                    + difficultyMultiplyer.toString() + "...");
+            // Tps Players to arena
+            // Gets location
+            player.teleport(getLocation(arenaID));
+            // Creates DungeonTask
+        } else {
+            // Arena not found
+            player.sendMessage(ChatColor.BOLD + "" + ChatColor.RED + "Available arena not found for dungeon: "
+                    + dungeonName + ", please try again later or make a new one...");
+        }
     }
 
     // * Gets the center location of the arena
@@ -135,7 +142,22 @@ public class Main extends JavaPlugin {
 
     // * Finds any availabe arena for dungeon
     private String findAvailableArena(String dungeonName) {
-        return "335dd1fa-01a1-43e8-a207-a37e65ef3f5f"; // ! Add Findavaialbe
+        FileConfiguration config = this.getConfig();
+        // Get all arenas
+        ConfigurationSection arenas = this.getConfig().getConfigurationSection("arenas");
+
+        Set<String> ids = arenas.getKeys(false);
+
+        // Iterate through and comapare dungeon name
+        for (String id : ids) {
+            if (dungeonName == arenas.getString(id + ".dungeon-name")) {
+                // Then is usable
+                return id;
+                // ! Checks if its not being used TO DO
+
+            }
+        }
+        return null;
 
     }
 
@@ -166,7 +188,7 @@ public class Main extends JavaPlugin {
             Location locale = player.getLocation();
 
             // Saves Location
-            config.set(prefix + "world", locale.getWorld());
+            config.set(prefix + "world", locale.getWorld().getName());
             config.set(prefix + "x", locale.getX());
             config.set(prefix + "y", locale.getY());
             config.set(prefix + "z", locale.getZ());
@@ -207,7 +229,7 @@ public class Main extends JavaPlugin {
             return false;
         }
         try {
-            double d = Integer.parseInt(strNum);
+            double d = Double.parseDouble(strNum);
         } catch (NumberFormatException nfe) {
             return false;
         }
