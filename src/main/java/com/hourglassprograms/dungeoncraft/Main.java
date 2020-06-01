@@ -129,13 +129,18 @@ public class Main extends JavaPlugin {
                 if (player.hasPermission("dungeoncraft.arena.list")) { // Must have permission
                     // Makes sure correct amount of arguments
                     if (args.length == 0) {
-                        player.sendMessage(ChatColor.BOLD + "===== Arenas (" + ")" + "=====");
+                        player.sendMessage(ChatColor.BOLD + "===== Arenas (" + currentArenas.size() + ")" + "=====");
                         for (Arena arena : currentArenas) {
                             player.sendMessage(ChatColor.GOLD + "===== " + arena.arenaID + "=====");
-                            player.sendMessage(ChatColor.WHITE + "- Dungeon Name: " + arena.dungeonName);
-                            player.sendMessage(ChatColor.WHITE + "- Location: " + arena.centerLocation.toString());
-                            player.sendMessage(ChatColor.WHITE + "- Current Wave: " + arena.currentWave);
-                            player.sendMessage(ChatColor.WHITE + "- Remaining Enemies: " + arena.remainingEnemies);
+                            player.sendMessage(ChatColor.DARK_AQUA + "- Dungeon Name: " + arena.dungeonName);
+                            player.sendMessage(ChatColor.DARK_AQUA + "- Location: ");
+                            player.sendMessage(ChatColor.DARK_AQUA + "\t World: "
+                                    + arena.centerLocation.getWorld().getName() + " X: "
+                                    + arena.centerLocation.getBlockX() + " Y: " + arena.centerLocation.getBlockY()
+                                    + " Z: " + arena.centerLocation.getBlockZ());
+
+                            player.sendMessage(ChatColor.DARK_AQUA + "- Current Wave: " + arena.currentWave);
+                            player.sendMessage(ChatColor.DARK_AQUA + "- Remaining Enemies: " + arena.remainingEnemies);
 
                         }
                         return true;
