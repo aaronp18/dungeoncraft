@@ -8,6 +8,7 @@ public class Arena {
     String arenaID;
     Location centerLocation;
     Integer currentWave = 0;
+    Integer totalWaves;
     Integer remainingEnemies = 0;
     Double difficultyMultiplyer = 1.0;
     Player player; // Add multiple

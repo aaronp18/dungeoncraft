@@ -142,6 +142,7 @@ public class Main extends JavaPlugin {
                 if (player.hasPermission("dungeoncraft.arena.list")) { // Must have permission
                     // Makes sure correct amount of arguments
                     if (args.length == 0) {
+                        updateRemaining();
                         player.sendMessage(ChatColor.BOLD + "===== Arenas (" + currentArenas.size() + ")" + "=====");
                         for (Arena arena : currentArenas) {
                             player.sendMessage(ChatColor.GOLD + "===== " + arena.arenaID + "=====");
@@ -212,6 +213,9 @@ public class Main extends JavaPlugin {
                 if (a.arenaID == arena.arenaID) {
                     // Then is current
                     a.player = player;
+                    a.difficultyMultiplyer = difficultyMultiplyer;
+                    a.dungeonName = dungeonName;
+                    a.currentWave = 1;
 
                 }
             }
@@ -222,7 +226,7 @@ public class Main extends JavaPlugin {
             scheduler.scheduleSyncDelayedTask(this, new Runnable() {
                 @Override
                 public void run() {
-                    spawnWave(dungeonName, 1, difficultyMultiplyer, arena.arenaID, player);
+                    spawnWave(arena.arenaID);
                 }
             }, 100L);
         } else {
@@ -233,21 +237,13 @@ public class Main extends JavaPlugin {
     }
 
     // * Spawns wave
-    protected void spawnWave(String dungeonName, int waveNum, Double difficultyMultiplyer, String arenaID,
-            Player player) {
+    protected void spawnWave(String arenaID) {
+        Arena arena = getArena(arenaID);
 
-        player.sendMessage(ChatColor.BOLD + "Starting wave: " + Integer.toString(waveNum));
-        String prefix = "dungeons." + dungeonName + ".waves.wave" + Integer.toString(waveNum);
-
-        // Sets arena to not available anymore with current waveNum
-        for (Arena a : currentArenas) {
-            if (arenaID == a.arenaID) {
-                a.currentWave = waveNum;
-            }
-        }
+        arena.player.sendMessage(ChatColor.BOLD + "Starting wave: " + Integer.toString(arena.currentWave));
+        String prefix = "dungeons." + arena.dungeonName + ".waves.wave" + Integer.toString(arena.currentWave);
 
         // Gets arena
-        Arena arena = getArena(arenaID);
 
         // Iterates through each mob
         FileConfiguration config = this.getConfig();
@@ -258,11 +254,11 @@ public class Main extends JavaPlugin {
 
         try {
             // Play lightning sound
-            player.playSound(arena.centerLocation, Sound.ENTITY_WITHER_SPAWN, 1.0f, 1.0f);
+            arena.player.playSound(arena.centerLocation, Sound.ENTITY_WITHER_SPAWN, 1.0f, 1.0f);
             // Iterate through and comapare dungeon name
             for (String mob : mobs) {
-                Integer amount = (int) (config.getInt(prefix + "." + mob + ".amount") * difficultyMultiplyer);
-                player.sendMessage("Spawning: " + mob + " x " + amount);
+                Integer amount = (int) (config.getInt(prefix + "." + mob + ".amount") * arena.difficultyMultiplyer);
+                arena.player.sendMessage("Spawning: " + mob + " x " + amount);
                 for (int i = 0; i < amount; i++) {
                     Double spawnRadius = 10.0;
                     // Random += location
@@ -298,11 +294,12 @@ public class Main extends JavaPlugin {
                         }
                     }
 
-                    String command = "execute at " + player.getName() + " run summon minecraft:" + mob + " " + spawnX
-                            + " " + spawnY + " " + spawnZ + " " + nbtString;
+                    String command = "execute at " + arena.player.getName() + " run summon minecraft:" + mob + " "
+                            + spawnX + " " + spawnY + " " + spawnZ + " " + nbtString;
 
                     // Spawns each mob
                     Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
+                    updateRemaining();
                 }
 
             }
@@ -310,7 +307,7 @@ public class Main extends JavaPlugin {
 
         Exception e) {
             // TO DO: handle exception
-            player.sendMessage("An error has occured... Perhaps the config is broken?");
+            arena.player.sendMessage("An error has occured... Perhaps the config is broken?");
             getLogger().info("An error has occured spawning wave: " + e.getMessage());
         }
         // +- random amount
@@ -466,6 +463,7 @@ public class Main extends JavaPlugin {
             newArena.centerLocation = getLocation(id);
             newArena.dungeonName = arenas.getString("." + id + ".dungeon-name");
             newArena.currentWave = 0;
+            newArena.totalWaves = arenas.getInt("." + id + ".wave-count");
             newArena.remainingEnemies = 0;
             newArena.player = null;
 
@@ -479,6 +477,9 @@ public class Main extends JavaPlugin {
 
         // Then counts
         for (Arena arena : currentArenas) {
+            // Reset remaining
+            arena.remainingEnemies = 0;
+            // Iterates through every entity
             for (Entity en : arena.centerLocation.getWorld().getEntities()) {
 
                 if (en.getScoreboardTags().contains(arena.arenaID)) {
@@ -488,8 +489,24 @@ public class Main extends JavaPlugin {
 
                 }
             }
+            // If 0, and running, then start next wave
+            if (arena.remainingEnemies == 0 && arena.currentWave != 0) {
+                // The wave ended
+                if (arena.currentWave < arena.totalWaves) {
+                    BukkitScheduler scheduler = getServer().getScheduler();
+                    // * After 5 seconds, spawn next wave
+                    arena.player.sendMessage(ChatColor.BOLD + "Wave " + arena.currentWave + " complete.");
+                    // Adds 1 to current wave
+                    arena.currentWave++;
+                    scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+                        @Override
+                        public void run() {
+                            spawnWave(arena.arenaID);
+                        }
+                    }, 100L);
+                }
+            }
         }
 
-        // If 0, and running, then start next wave
     }
 }
