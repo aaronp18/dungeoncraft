@@ -463,7 +463,7 @@ public class Main extends JavaPlugin {
             newArena.centerLocation = getLocation(id);
             newArena.dungeonName = arenas.getString("." + id + ".dungeon-name");
             newArena.currentWave = 0;
-            newArena.totalWaves = arenas.getInt("." + id + ".wave-count");
+            newArena.totalWaves = config.getInt("dungeons." + newArena.dungeonName + ".wave-count");
             newArena.remainingEnemies = 0;
             newArena.player = null;
 
