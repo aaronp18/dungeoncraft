@@ -23,7 +23,7 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
 public class Main extends JavaPlugin {
-    public ArrayList<Arena> currentArenas;
+    ArrayList<Arena> currentArenas = new ArrayList<Arena>();
 
     @Override
     public void onEnable() {
@@ -129,7 +129,7 @@ public class Main extends JavaPlugin {
                 if (player.hasPermission("dungeoncraft.arena.list")) { // Must have permission
                     // Makes sure correct amount of arguments
                     if (args.length == 0) {
-                        player.sendMessage(ChatColor.BOLD + "===== Arenas (" + currentArenas.size() + ")" + "=====");
+                        player.sendMessage(ChatColor.BOLD + "===== Arenas (" + ")" + "=====");
                         for (Arena arena : currentArenas) {
                             player.sendMessage(ChatColor.GOLD + "===== " + arena.arenaID + "=====");
                             player.sendMessage(ChatColor.WHITE + "- Dungeon Name: " + arena.dungeonName);
@@ -433,7 +433,7 @@ public class Main extends JavaPlugin {
     // *Loads arenas into global hash map to keep track of waves and avaialblity
     private void loadArenas() {
         // Clears all current arenas
-        currentArenas.clear();
+        // currentArenas.clear();
 
         FileConfiguration config = this.getConfig();
         // Get all arenas
@@ -449,6 +449,7 @@ public class Main extends JavaPlugin {
             newArena.dungeonName = arenas.getString("." + id + ".dungeon-name");
             newArena.currentWave = 0;
             newArena.remainingEnemies = 0;
+            newArena.player = null;
 
             currentArenas.add(newArena);
         }

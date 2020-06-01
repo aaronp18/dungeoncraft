@@ -7,7 +7,7 @@ public class Arena {
     String dungeonName;
     String arenaID;
     Location centerLocation;
-    Integer currentWave;
-    Integer remainingEnemies;
+    Integer currentWave = 0;
+    Integer remainingEnemies = 0;
     Player player; // Add multiple
 }
