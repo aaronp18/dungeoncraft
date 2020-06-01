@@ -1,22 +1,27 @@
 main: com.hourglassprograms.dungeoncraft.Main
 name: DungeonCraft
-version: 0.0.6
+version: 0.0.7
 author: Hourglass Programs
 api-version: 1.15
 commands:
   create-dungeon:
     description: "Use this to create a new dungeon"
-    permission: dungeoncraft.create
+    permission: dungeoncraft.dungeon.create
     permission-message: You do not have permission to use this command.
     usage: "Usage: /<command> <dungeon name>"
   create-arena:
     description: "Use this to create a new arena from your current position used for <dungeon name>"
-    permission: dungeoncraft.create-arena
+    permission: dungeoncraft.arena.create
     permission-message: You do not have permission to use this command.
     usage: "Usage: /<command> <dungeon name>"
+  arena:
+    description: "Use this to list all the arenas"
+    permission: dungeoncraft.arena.list
+    permission-message: You do not have permission to use this command.
+    usage: "Usage: /<command>"
   start-dungeon:
     description: "Use this to start a dungeon"
-    permission: dungeoncraft.start-dungeon
+    permission: dungeoncraft.start
     permission-message: You do not have permission to use this command.
     usage: "Usage: /<command> <dungeon name> <difficulty>"
   dc-reload:

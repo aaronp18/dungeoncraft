@@ -63,7 +63,7 @@ public class Main extends JavaPlugin {
                 return true;
             } // *Create command - requires name for new dungeon
             else if (cmd.getName().equalsIgnoreCase("create-dungeon")) {
-                if (player.hasPermission("dungeoncraft.createdungeon")) { // Must have permission
+                if (player.hasPermission("dungeoncraft.dungeon.create")) { // Must have permission
                     // Makes sure correct amount of arguments
                     if (args.length == 1) {
                         player.sendMessage(ChatColor.BOLD + "Creating dungeon...");
@@ -84,7 +84,7 @@ public class Main extends JavaPlugin {
 
             } // *Create ArenaRoom - Requires dungeon name
             else if (cmd.getName().equalsIgnoreCase("create-arena")) {
-                if (player.hasPermission("dungeoncraft.createarena")) { // Must have permission
+                if (player.hasPermission("dungeoncraft.arena.create")) { // Must have permission
                     // Makes sure correct amount of arguments
                     if (args.length == 1) {
                         player.sendMessage(ChatColor.BOLD + "Creating Arena From your postion...");
@@ -117,6 +117,32 @@ public class Main extends JavaPlugin {
                         return false;
                     }
                     // Creates Dungeon
+
+                } else {
+                    player.sendMessage(ChatColor.BOLD + "You do not have the perms to do this");
+                    return true;
+                }
+
+            }
+            // * Lists the arenas
+            else if (cmd.getName().equalsIgnoreCase("arena")) {
+                if (player.hasPermission("dungeoncraft.arena.list")) { // Must have permission
+                    // Makes sure correct amount of arguments
+                    if (args.length == 0) {
+                        player.sendMessage(ChatColor.BOLD + "===== Arenas (" + currentArenas.size() + ")" + "=====");
+                        for (Arena arena : currentArenas) {
+                            player.sendMessage(ChatColor.GOLD + "===== " + arena.arenaID + "=====");
+                            player.sendMessage(ChatColor.WHITE + "- Dungeon Name: " + arena.dungeonName);
+                            player.sendMessage(ChatColor.WHITE + "- Location: " + arena.centerLocation.toString());
+                            player.sendMessage(ChatColor.WHITE + "- Current Wave: " + arena.currentWave);
+                            player.sendMessage(ChatColor.WHITE + "- Remaining Enemies: " + arena.remainingEnemies);
+
+                        }
+                        return true;
+                    } else {
+                        // Incorrect amount of args
+                        return false;
+                    }
 
                 } else {
                     player.sendMessage(ChatColor.BOLD + "You do not have the perms to do this");
@@ -422,6 +448,7 @@ public class Main extends JavaPlugin {
             newArena.centerLocation = getLocation(id);
             newArena.dungeonName = arenas.getString("." + id + ".dungeon-name");
             newArena.currentWave = 0;
+            newArena.remainingEnemies = 0;
 
             currentArenas.add(newArena);
         }
