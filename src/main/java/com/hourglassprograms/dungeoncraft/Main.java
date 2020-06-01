@@ -4,9 +4,11 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -19,9 +21,15 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
 public class Main extends JavaPlugin {
+    public HashMap<String, Integer> currentArenas;
+
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
+
+        // Load Current Arenas
+        loadArenas();
+
         getLogger().info("Dungeon Craft has loaded");
 
     }
@@ -50,12 +58,17 @@ public class Main extends JavaPlugin {
             else if (cmd.getName().equalsIgnoreCase("create-dungeon")) {
                 if (player.hasPermission("dungeoncraft.createdungeon")) { // Must have permission
                     // Makes sure correct amount of arguments
-                    player.sendMessage(ChatColor.BOLD + "Creating dungeon...");
-                    createDungeon(args[0]);
-                    // Creates new dungeon config
-                    return true;
+                    if (args.length == 1) {
+                        player.sendMessage(ChatColor.BOLD + "Creating dungeon...");
+                        // Creates Dungeon
+                        createDungeon(args[0]);
+                        // Creates new dungeon config
+                        return true;
 
-                    // Creates Dungeon
+                    } else {
+                        // Incorrect amount of args
+                        return false;
+                    }
 
                 } else {
                     player.sendMessage(ChatColor.BOLD + "You do not have the perms to do this");
@@ -159,11 +172,15 @@ public class Main extends JavaPlugin {
         }
     }
 
+    // * Spawns wave
     protected void spawnWave(String dungeonName, int waveNum, Double difficultyMultiplyer, String arenaID,
             Player player) {
-        // ! TO DO
+
         player.sendMessage(ChatColor.BOLD + "Starting wave: " + Integer.toString(waveNum));
         String prefix = "dungeons." + dungeonName + ".waves.wave" + Integer.toString(waveNum);
+
+        // Sets arena to not available anymore with current waveNum
+        currentArenas.replace(arenaID, waveNum);
 
         // Gets location
         Location center = getLocation(arenaID);
@@ -175,35 +192,62 @@ public class Main extends JavaPlugin {
 
         Set<String> mobs = wave.getKeys(false);
 
-        // Iterate through and comapare dungeon name
-        for (String mob : mobs) {
-            Integer amount = (int) (config.getInt(prefix + "." + mob + ".amount") * difficultyMultiplyer);
-            player.sendMessage("Spawning: " + mob + " x " + amount);
-            for (int i = 0; i < amount; i++) {
-                Double spawnRadius = 10.0;
-                // Random += location
-                Double vX = getRandomDouble(-spawnRadius, spawnRadius);
-                Double vZ = getRandomDouble(-spawnRadius, spawnRadius);
+        try {
+            // Play lightning sound
+            player.playSound(center, Sound.ENTITY_WITHER_SPAWN, 1.0f, 1.0f);
+            // Iterate through and comapare dungeon name
+            for (String mob : mobs) {
+                Integer amount = (int) (config.getInt(prefix + "." + mob + ".amount") * difficultyMultiplyer);
+                player.sendMessage("Spawning: " + mob + " x " + amount);
+                for (int i = 0; i < amount; i++) {
+                    Double spawnRadius = 10.0;
+                    // Random += location
+                    Double vX = getRandomDouble(-spawnRadius, spawnRadius);
+                    Double vZ = getRandomDouble(-spawnRadius, spawnRadius);
 
-                Double spawnX = center.getX() + vX;
-                Double spawnZ = center.getZ() + vZ;
-                Double spawnY = center.getY() + 2.0;
+                    Double spawnX = center.getX() + vX;
+                    Double spawnZ = center.getZ() + vZ;
+                    Double spawnY = center.getY() + 3.0;
 
-                String nbtString = "";
-                // Modifiers
-                if (config.contains(prefix + "." + mob + ".nbt")) {
-                    nbtString = config.getString(prefix + "." + mob + ".nbt");
+                    String nbtString = "";
+                    // Modifiers
+                    // If contains an nbt tag
+                    if (config.contains(prefix + "." + mob + ".nbt")) {
+                        // Get nbt from config
+                        nbtString = config.getString(prefix + "." + mob + ".nbt");
+                        // Checking if not empty
+
+                        if (!nbtString.equals("{}")) {
+                            // Remove end bracket
+                            nbtString = StringUtils.chop(nbtString);
+                            // Add on ,data}
+                            // Adds death loot table, adds teamId for detection, adds slowfalling effect for
+                            // 3 secs
+                            nbtString += ",DeathLootTable:\"dungeoncraft:entities/nodrops\",Team:" + arenaID
+                                    + ",ActiveEffects:[{Id:28,Amplifier:0,Duration:60f}],PersistenceRequired:1}";
+
+                        } else {
+                            // Not correct format
+                            // Replace with {data}
+                            nbtString = "{DeathLootTable:\"dungeoncraft:entities/nodrops\",Team:" + arenaID
+                                    + ",ActiveEffects:[{Id:28,Amplifier:0,Duration:60f}],PersistenceRequired:1}";
+                        }
+                    }
+
+                    String command = "execute at " + player.getName() + " run summon minecraft:" + mob + " " + spawnX
+                            + " " + spawnY + " " + spawnZ + " " + nbtString;
+
+                    // Spawns each mob
+                    Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
                 }
 
-                String command = "execute at " + player.getName() + " run summon minecraft:" + mob + " " + spawnX + " "
-                        + spawnY + " " + spawnZ + " " + nbtString;
-                // +- random amount
-
-                // Spawns each mob
-
-                Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
             }
+        } catch (
 
+        Exception e) {
+            // TO DO: handle exception
+            player.sendMessage("An error has occured... Perhaps the config is broken?");
+            getLogger().info("An error has occured spawning wave: " + e.getMessage());
         }
         // +- random amount
 
@@ -233,10 +277,12 @@ public class Main extends JavaPlugin {
         // Iterate through and comapare dungeon name
         for (String id : ids) {
             if (dungeonName.equals(config.getString("arenas." + id + ".dungeon-name"))) {
-                // Then is usable
-                return id;
-                // ! Checks if its not being used TO DO
-
+                // Must be not in use
+                if (currentArenas.get(id) == 0) {
+                    // Then is usable
+                    return id;
+                    // ! Checks if its not being used TO DO
+                }
             }
         }
         return null;
@@ -299,9 +345,11 @@ public class Main extends JavaPlugin {
         for (int i = 1; i < waveCount + 1; i++) {
             String wavePrefix = prefix + "waves." + "wave" + i + ".zombie.";
             config.set(wavePrefix + "amount", 5);
-            config.set(wavePrefix + "nbt", "{}");
+            config.set(wavePrefix + "nbt",
+                    "{HandItems:[{id:iron_sword,Count:1}],HandDropChances:[0.00F],ArmorItems:[{id:chainmail_boots,Count:1},{id:chainmail_leggings,Count:1},{id:chainmail_chestplate,Count:1},{id:chainmail_helmet,Count:1}],Attributes:[{Name:\"generic.maxHealth\",Base:20.0F}],ArmorDropChances:[0F,0F,0F,0F]}");
         }
         this.saveConfig();
+
     }
 
     // *Checks if string is a number
@@ -317,8 +365,26 @@ public class Main extends JavaPlugin {
         return true;
     }
 
+    // *Gets random double
     public static double getRandomDouble(double min, double max) {
         double x = (Math.random() * ((max - min) + 1)) + min;
         return x;
+    }
+
+    // *Loads arenas into global hash map to keep track of waves and avaialblity
+    private void loadArenas() {
+        // Clears all current arenas
+        currentArenas.clear();
+
+        FileConfiguration config = this.getConfig();
+        // Get all arenas
+        ConfigurationSection arenas = config.getConfigurationSection("arenas");
+
+        Set<String> ids = arenas.getKeys(false);
+
+        // Iterate through and add to current arenas with value = 0 (available)
+        for (String id : ids) {
+            currentArenas.put(id, 0);
+        }
     }
 }
