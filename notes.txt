@@ -15,4 +15,49 @@ waves:
             amount: 3
             weapon: *optional*
             damage: 3
-   
+
+dungeons:
+  Dung1:
+    wave-count: 5
+    dungeon-id: 17
+    waves:
+      wave1:
+        zombie:
+          health: 20
+          amount: 5
+          damage: 20
+      wave2:
+        zombie:
+          health: 20
+          amount: 5
+          damage: 20
+      wave3:
+        zombie:
+          health: 20
+          amount: 5
+          damage: 20
+      wave4:
+        zombie:
+          health: 20
+          amount: 5
+          damage: 20
+      wave5:
+        zombie:
+          health: 20
+          amount: 5
+          damage: 20
+arenas:
+  arena1:
+    dungeon-name: Dung1
+    world: world
+    x: 33.95341167043651
+    y: 87.0
+    z: 240.33040959146084
+  arena2:
+    dungeon-name: Dung1
+    world: world
+    x: 24.746962842180373
+    y: 87.0
+    z: 242.75329662468366
+LivingEntity spawnedMob = (LivingEntity) center.getWorld().spawnEntity(center,
+                        EntityType.valueOf(mob.toUpperCase()));

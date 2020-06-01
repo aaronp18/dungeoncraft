@@ -11,8 +11,12 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.util.Vector;
 
 public class Main extends JavaPlugin {
     @Override
@@ -126,6 +130,7 @@ public class Main extends JavaPlugin {
 
     }
 
+    // * Starts dungeon
     private void startDungeon(String dungeonName, String difficulty, Player player) {
         // Checks if theres an avaible Arena
         String arenaID = findAvailableArena(dungeonName);
@@ -139,11 +144,68 @@ public class Main extends JavaPlugin {
             // Gets location
             player.teleport(getLocation(arenaID));
             // Creates DungeonTask
+            BukkitScheduler scheduler = getServer().getScheduler();
+            // * After 10 seconds, spawn first wave
+            scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    spawnWave(dungeonName, 1, difficultyMultiplyer, arenaID, player);
+                }
+            }, 100L);
         } else {
             // Arena not found
             player.sendMessage(ChatColor.BOLD + "" + ChatColor.RED + "Available arena not found for dungeon: "
                     + dungeonName + ", please try again later or make a new one...");
         }
+    }
+
+    protected void spawnWave(String dungeonName, int waveNum, Double difficultyMultiplyer, String arenaID,
+            Player player) {
+        // ! TO DO
+        player.sendMessage(ChatColor.BOLD + "Starting wave: " + Integer.toString(waveNum));
+        String prefix = "dungeons." + dungeonName + ".waves.wave" + Integer.toString(waveNum);
+
+        // Gets location
+        Location center = getLocation(arenaID);
+
+        // Iterates through each mob
+        FileConfiguration config = this.getConfig();
+        // Get all mobs in wave
+        ConfigurationSection wave = config.getConfigurationSection(prefix);
+
+        Set<String> mobs = wave.getKeys(false);
+
+        // Iterate through and comapare dungeon name
+        for (String mob : mobs) {
+            player.sendMessage(
+                    "Spawning: " + mob + "x" + Integer.toString(config.getInt(prefix + "." + mob + ".amount")));
+            for (int i = 0; i < config.getInt(prefix + "." + mob + ".amount"); i++) {
+                Double spawnRadius = 10.0;
+                // Random += location
+                Double vX = getRandomDouble(-spawnRadius, spawnRadius);
+                Double vZ = getRandomDouble(-spawnRadius, spawnRadius);
+
+                Double spawnX = center.getX() + vX;
+                Double spawnZ = center.getZ() + vZ;
+                Double spawnY = center.getY() + 3.0;
+
+                // Modifiers
+                String nbtString = "";
+
+                String command = "execute at " + player.getName() + " run summon minecraft:" + mob + " " + spawnX + " "
+                        + spawnY + " " + spawnZ;
+                // +- random amount
+
+                // Spawns each mob
+
+                Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
+            }
+
+        }
+        // +- random amount
+
+        // Spawns each mob
+
     }
 
     // * Gets the center location of the arena
@@ -251,5 +313,10 @@ public class Main extends JavaPlugin {
             return false;
         }
         return true;
+    }
+
+    public static double getRandomDouble(double min, double max) {
+        double x = (Math.random() * ((max - min) + 1)) + min;
+        return x;
     }
 }
