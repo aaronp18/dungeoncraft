@@ -1,5 +1,8 @@
 package com.hourglassprograms.dungeoncraft;
 
+import com.hourglassprograms.dungeoncraft.Arena;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.UUID;
@@ -16,12 +19,14 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
 public class Main extends JavaPlugin {
-    public HashMap<String, Integer> currentArenas;
+    public ArrayList<Arena> currentArenas;
 
     @Override
     public void onEnable() {
@@ -40,6 +45,11 @@ public class Main extends JavaPlugin {
         // Reloads
         // Plugin reloads
 
+    }
+
+    @EventHandler
+    public void onEDeath(EntityDeathEvent event) {
+        // If team = currentArena
     }
 
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -180,7 +190,11 @@ public class Main extends JavaPlugin {
         String prefix = "dungeons." + dungeonName + ".waves.wave" + Integer.toString(waveNum);
 
         // Sets arena to not available anymore with current waveNum
-        currentArenas.replace(arenaID, waveNum);
+        for (Arena arena : currentArenas) {
+            if (arena.arenaID == arenaID) {
+                arena.currentWave = waveNum;
+            }
+        }
 
         // Gets location
         Location center = getLocation(arenaID);
@@ -278,6 +292,11 @@ public class Main extends JavaPlugin {
         for (String id : ids) {
             if (dungeonName.equals(config.getString("arenas." + id + ".dungeon-name"))) {
                 // Must be not in use
+                for (Arena arena : currentArenas) {
+                    if (arena.arenaID == id) {
+                        arena.currentWave = waveNum;
+                    }
+                }
                 if (currentArenas.get(id) == 0) {
                     // Then is usable
                     return id;
@@ -323,6 +342,16 @@ public class Main extends JavaPlugin {
             // Creates new arena in config
 
             this.saveConfig();
+
+            // Load into object
+            Arena newArena = new Arena();
+            newArena.arenaID = ID;
+            newArena.centerLocation = locale;
+            newArena.dungeonName = dungeonName;
+            newArena.currentWave = 0;
+
+            currentArenas.add(newArena);
+
             player.sendMessage(ChatColor.BOLD + "Arena created (" + dungeonName + ") with ID: " + ID);
         } else {
             player.sendMessage(ChatColor.BOLD + "Dungeon not found, use /list-dungeons to get the list");
@@ -384,7 +413,13 @@ public class Main extends JavaPlugin {
 
         // Iterate through and add to current arenas with value = 0 (available)
         for (String id : ids) {
-            currentArenas.put(id, 0);
+            Arena newArena = new Arena();
+            newArena.arenaID = id;
+            newArena.centerLocation = getLocation(id);
+            newArena.dungeonName = arenas.getString("." + id + ".dungeon-name");
+            newArena.currentWave = 0;
+
+            currentArenas.add(newArena);
         }
     }
 }
