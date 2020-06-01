@@ -14,6 +14,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -45,8 +46,20 @@ public class Main extends JavaPlugin {
     }
 
     @EventHandler
-    public void onEDeath(EntityDeathEvent event) {
+    public void onEntityDeath(EntityDeathEvent event) {
         // If team = currentArena
+        Entity entity = event.getEntity();
+        Set<String> tags = entity.getScoreboardTags();
+
+        for (Arena arena : currentArenas) {
+            if (tags.contains(arena.arenaID)) {
+                // Then means was from this arena
+
+                // Then update remaining num
+                updateRemaining();
+
+            }
+        }
     }
 
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -134,7 +147,7 @@ public class Main extends JavaPlugin {
                             player.sendMessage(ChatColor.GOLD + "===== " + arena.arenaID + "=====");
                             player.sendMessage(ChatColor.DARK_AQUA + "- Dungeon Name: " + arena.dungeonName);
                             player.sendMessage(ChatColor.DARK_AQUA + "- Location: ");
-                            player.sendMessage(ChatColor.DARK_AQUA + "\t World: "
+                            player.sendMessage(ChatColor.DARK_AQUA + "      World: "
                                     + arena.centerLocation.getWorld().getName() + " X: "
                                     + arena.centerLocation.getBlockX() + " Y: " + arena.centerLocation.getBlockY()
                                     + " Z: " + arena.centerLocation.getBlockZ());
@@ -274,14 +287,14 @@ public class Main extends JavaPlugin {
                             // Add on ,data}
                             // Adds death loot table, adds teamId for detection, adds slowfalling effect for
                             // 3 secs
-                            nbtString += ",DeathLootTable:\"dungeoncraft:entities/nodrops\",Team:" + arena.arenaID
-                                    + ",ActiveEffects:[{Id:28,Amplifier:0,Duration:60f}],PersistenceRequired:1}";
+                            nbtString += ",DeathLootTable:\"dungeoncraft:entities/nodrops\",ActiveEffects:[{Id:28,Amplifier:0,Duration:60f}],PersistenceRequired:1,Tags:[\""
+                                    + arenaID + "\"]}";
 
                         } else {
                             // Not correct format
                             // Replace with {data}
-                            nbtString = "{DeathLootTable:\"dungeoncraft:entities/nodrops\",Team:" + arena.arenaID
-                                    + ",ActiveEffects:[{Id:28,Amplifier:0,Duration:60f}],PersistenceRequired:1}";
+                            nbtString = "{DeathLootTable:\"dungeoncraft:entities/nodrops\",ActiveEffects:[{Id:28,Amplifier:0,Duration:60f}],PersistenceRequired:1,Tags:[\""
+                                    + arenaID + "\"]}";
                         }
                     }
 
@@ -458,5 +471,25 @@ public class Main extends JavaPlugin {
 
             currentArenas.add(newArena);
         }
+    }
+
+    // * Updates remaining enemies
+    private void updateRemaining() {
+        // Get all entities
+
+        // Then counts
+        for (Arena arena : currentArenas) {
+            for (Entity en : arena.centerLocation.getWorld().getEntities()) {
+
+                if (en.getScoreboardTags().contains(arena.arenaID)) {
+                    // Then means was from this arena
+                    arena.remainingEnemies += 1;
+                    // Then can add to count
+
+                }
+            }
+        }
+
+        // If 0, and running, then start next wave
     }
 }

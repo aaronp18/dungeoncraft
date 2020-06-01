@@ -9,5 +9,6 @@ public class Arena {
     Location centerLocation;
     Integer currentWave = 0;
     Integer remainingEnemies = 0;
+    Double difficultyMultiplyer = 1.0;
     Player player; // Add multiple
 }
