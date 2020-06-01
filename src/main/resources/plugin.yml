@@ -1,6 +1,6 @@
 main: com.hourglassprograms.dungeoncraft.Main
 name: DungeonCraft
-version: 0.0.5
+version: 0.0.6
 author: Hourglass Programs
 api-version: 1.15
 commands:

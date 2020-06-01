@@ -177,9 +177,9 @@ public class Main extends JavaPlugin {
 
         // Iterate through and comapare dungeon name
         for (String mob : mobs) {
-            player.sendMessage(
-                    "Spawning: " + mob + "x" + Integer.toString(config.getInt(prefix + "." + mob + ".amount")));
-            for (int i = 0; i < config.getInt(prefix + "." + mob + ".amount"); i++) {
+            Integer amount = (int) (config.getInt(prefix + "." + mob + ".amount") * difficultyMultiplyer);
+            player.sendMessage("Spawning: " + mob + " x " + amount);
+            for (int i = 0; i < amount; i++) {
                 Double spawnRadius = 10.0;
                 // Random += location
                 Double vX = getRandomDouble(-spawnRadius, spawnRadius);
@@ -187,13 +187,16 @@ public class Main extends JavaPlugin {
 
                 Double spawnX = center.getX() + vX;
                 Double spawnZ = center.getZ() + vZ;
-                Double spawnY = center.getY() + 3.0;
+                Double spawnY = center.getY() + 2.0;
 
-                // Modifiers
                 String nbtString = "";
+                // Modifiers
+                if (config.contains(prefix + "." + mob + ".nbt")) {
+                    nbtString = config.getString(prefix + "." + mob + ".nbt");
+                }
 
                 String command = "execute at " + player.getName() + " run summon minecraft:" + mob + " " + spawnX + " "
-                        + spawnY + " " + spawnZ;
+                        + spawnY + " " + spawnZ + " " + nbtString;
                 // +- random amount
 
                 // Spawns each mob
@@ -295,9 +298,8 @@ public class Main extends JavaPlugin {
 
         for (int i = 1; i < waveCount + 1; i++) {
             String wavePrefix = prefix + "waves." + "wave" + i + ".zombie.";
-            config.set(wavePrefix + "health", 20);
             config.set(wavePrefix + "amount", 5);
-            config.set(wavePrefix + "damage", 20);
+            config.set(wavePrefix + "nbt", "{}");
         }
         this.saveConfig();
     }
