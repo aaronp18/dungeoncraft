@@ -1,7 +1,5 @@
 package com.hourglassprograms.dungeoncraft;
 
-import com.hourglassprograms.dungeoncraft.Arena;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
@@ -16,7 +14,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -156,23 +153,32 @@ public class Main extends JavaPlugin {
     // * Starts dungeon
     private void startDungeon(String dungeonName, String difficulty, Player player) {
         // Checks if theres an avaible Arena
-        String arenaID = findAvailableArena(dungeonName);
-        if (arenaID != null) {
+        Arena arena = findAvailableArena(dungeonName);
+        if (arena != null) {
 
             // Converts difficulty to multiplyer
             Double difficultyMultiplyer = convertDifficulty(difficulty);
-            player.sendMessage(ChatColor.BOLD + "Teleporting to arena " + arenaID + " on difficulty multiplyer of: "
-                    + difficultyMultiplyer.toString() + "...");
+            player.sendMessage(ChatColor.GOLD + "Teleporting to arena " + arena.arenaID
+                    + " on difficulty multiplyer of: " + difficultyMultiplyer.toString() + "...");
             // Tps Players to arena
-            // Gets location
-            player.teleport(getLocation(arenaID));
+            player.teleport(arena.centerLocation);
+
+            // Updates the current arena with player
+            for (Arena a : currentArenas) {
+                if (a.arenaID == arena.arenaID) {
+                    // Then is current
+                    a.player = player;
+
+                }
+            }
+
             // Creates DungeonTask
             BukkitScheduler scheduler = getServer().getScheduler();
             // * After 10 seconds, spawn first wave
             scheduler.scheduleSyncDelayedTask(this, new Runnable() {
                 @Override
                 public void run() {
-                    spawnWave(dungeonName, 1, difficultyMultiplyer, arenaID, player);
+                    spawnWave(dungeonName, 1, difficultyMultiplyer, arena.arenaID, player);
                 }
             }, 100L);
         } else {
@@ -190,14 +196,14 @@ public class Main extends JavaPlugin {
         String prefix = "dungeons." + dungeonName + ".waves.wave" + Integer.toString(waveNum);
 
         // Sets arena to not available anymore with current waveNum
-        for (Arena arena : currentArenas) {
-            if (arena.arenaID == arenaID) {
-                arena.currentWave = waveNum;
+        for (Arena a : currentArenas) {
+            if (arenaID == a.arenaID) {
+                a.currentWave = waveNum;
             }
         }
 
-        // Gets location
-        Location center = getLocation(arenaID);
+        // Gets arena
+        Arena arena = getArena(arenaID);
 
         // Iterates through each mob
         FileConfiguration config = this.getConfig();
@@ -208,7 +214,7 @@ public class Main extends JavaPlugin {
 
         try {
             // Play lightning sound
-            player.playSound(center, Sound.ENTITY_WITHER_SPAWN, 1.0f, 1.0f);
+            player.playSound(arena.centerLocation, Sound.ENTITY_WITHER_SPAWN, 1.0f, 1.0f);
             // Iterate through and comapare dungeon name
             for (String mob : mobs) {
                 Integer amount = (int) (config.getInt(prefix + "." + mob + ".amount") * difficultyMultiplyer);
@@ -219,9 +225,9 @@ public class Main extends JavaPlugin {
                     Double vX = getRandomDouble(-spawnRadius, spawnRadius);
                     Double vZ = getRandomDouble(-spawnRadius, spawnRadius);
 
-                    Double spawnX = center.getX() + vX;
-                    Double spawnZ = center.getZ() + vZ;
-                    Double spawnY = center.getY() + 3.0;
+                    Double spawnX = arena.centerLocation.getX() + vX;
+                    Double spawnZ = arena.centerLocation.getZ() + vZ;
+                    Double spawnY = arena.centerLocation.getY() + 3.0;
 
                     String nbtString = "";
                     // Modifiers
@@ -237,13 +243,13 @@ public class Main extends JavaPlugin {
                             // Add on ,data}
                             // Adds death loot table, adds teamId for detection, adds slowfalling effect for
                             // 3 secs
-                            nbtString += ",DeathLootTable:\"dungeoncraft:entities/nodrops\",Team:" + arenaID
+                            nbtString += ",DeathLootTable:\"dungeoncraft:entities/nodrops\",Team:" + arena.arenaID
                                     + ",ActiveEffects:[{Id:28,Amplifier:0,Duration:60f}],PersistenceRequired:1}";
 
                         } else {
                             // Not correct format
                             // Replace with {data}
-                            nbtString = "{DeathLootTable:\"dungeoncraft:entities/nodrops\",Team:" + arenaID
+                            nbtString = "{DeathLootTable:\"dungeoncraft:entities/nodrops\",Team:" + arena.arenaID
                                     + ",ActiveEffects:[{Id:28,Amplifier:0,Duration:60f}],PersistenceRequired:1}";
                         }
                     }
@@ -269,6 +275,16 @@ public class Main extends JavaPlugin {
 
     }
 
+    // Returns updated Arena
+    private Arena getArena(String arenaID) {
+        for (Arena a : currentArenas) {
+            if (arenaID == a.arenaID) {
+                return a;
+            }
+        }
+        return null;
+    }
+
     // * Gets the center location of the arena
     private Location getLocation(String arenaID) {
         FileConfiguration config = this.getConfig();
@@ -281,29 +297,17 @@ public class Main extends JavaPlugin {
     }
 
     // * Finds any availabe arena for dungeon
-    private String findAvailableArena(String dungeonName) {
-        FileConfiguration config = this.getConfig();
-        // Get all arenas
-        ConfigurationSection arenas = config.getConfigurationSection("arenas");
-
-        Set<String> ids = arenas.getKeys(false);
-
-        // Iterate through and comapare dungeon name
-        for (String id : ids) {
-            if (dungeonName.equals(config.getString("arenas." + id + ".dungeon-name"))) {
-                // Must be not in use
-                for (Arena arena : currentArenas) {
-                    if (arena.arenaID == id) {
-                        arena.currentWave = waveNum;
-                    }
-                }
-                if (currentArenas.get(id) == 0) {
-                    // Then is usable
-                    return id;
-                    // ! Checks if its not being used TO DO
+    private Arena findAvailableArena(String dungeonName) {
+        for (Arena arena : currentArenas) {
+            if (dungeonName.equals(arena.dungeonName)) {
+                // Then is for that dungeon
+                if (arena.currentWave == 0) {
+                    // Then is avialable
+                    return arena;
                 }
             }
         }
+
         return null;
 
     }
