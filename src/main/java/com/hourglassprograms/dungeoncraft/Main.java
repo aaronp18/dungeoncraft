@@ -25,8 +25,10 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
 public class Main extends JavaPlugin implements Listener {
     ArrayList<Arena> currentArenas = new ArrayList<Arena>();
@@ -488,10 +490,11 @@ public class Main extends JavaPlugin implements Listener {
             objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
             Score score1 = objective.getScore(ChatColor.DARK_AQUA + "Wave: " + ChatColor.GREEN + 0);
+
             score1.setScore(3);
-            Score score2 = objective.getScore(ChatColor.DARK_AQUA + "Remaining Enemies" + ChatColor.GREEN + 0);
+            Score score2 = objective.getScore(ChatColor.DARK_AQUA + "Remaining Enemies: " + ChatColor.GREEN + 0);
             score2.setScore(2);
-            Score score3 = objective.getScore(ChatColor.DARK_AQUA + "Difficulty" + ChatColor.GREEN + "1.0");
+            Score score3 = objective.getScore(ChatColor.DARK_AQUA + "Difficulty: " + ChatColor.GREEN + "1.0");
             score3.setScore(1);
 
             currentArenas.add(newArena);
@@ -535,8 +538,25 @@ public class Main extends JavaPlugin implements Listener {
             }
 
             // Update scoreboard
-
+            arena.player.setScoreboard(getScoreboard(arena));
         }
 
+    }
+
+    private @NotNull Scoreboard getScoreboard(Arena arena) {
+        Objective objective = arena.scoreboard.registerNewObjective(arena.arenaID, "dummy",
+                ChatColor.GOLD + "=== " + arena.dungeonName + " ===");
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+
+        Score score1 = objective.getScore(ChatColor.DARK_AQUA + "Wave: " + ChatColor.GREEN + arena.currentWave);
+
+        score1.setScore(3);
+        Score score2 = objective
+                .getScore(ChatColor.DARK_AQUA + "Remaining Enemies: " + ChatColor.GREEN + arena.remainingEnemies);
+        score2.setScore(2);
+        Score score3 = objective
+                .getScore(ChatColor.DARK_AQUA + "Difficulty: " + ChatColor.GREEN + arena.difficultyMultiplyer);
+        score3.setScore(1);
+        return arena.scoreboard;
     }
 }
