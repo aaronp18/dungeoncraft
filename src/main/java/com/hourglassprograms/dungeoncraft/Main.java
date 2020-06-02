@@ -40,6 +40,8 @@ public class Main extends JavaPlugin implements Listener {
         // Load Current Arenas
         loadArenas();
 
+        killAllUnused();
+
         getLogger().info("Dungeon Craft has loaded");
         getServer().getPluginManager().registerEvents(this, this);
 
@@ -244,7 +246,7 @@ public class Main extends JavaPlugin implements Listener {
                     a.currentWave = 1;
                     a.isWaiting = true;
                     // Displays scoreboard
-                    a.player.setScoreboard(a.scoreboard);
+
                     updateScoreboard(a);
 
                 }
@@ -576,8 +578,9 @@ public class Main extends JavaPlugin implements Listener {
                 // The wave ended
                 if (arena.currentWave < arena.totalWaves) {
                     for (Player player : arena.players) {
-                        player.playSound(arena.centerLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.0f);
-                        arena.player.sendMessage(ChatColor.BOLD + "Wave " + arena.currentWave + " complete.");
+                        player.playSound(arena.centerLocation, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                        player.sendMessage(
+                                ChatColor.GOLD + "" + ChatColor.BOLD + "Wave " + arena.currentWave + " complete.");
                     }
 
                     BukkitScheduler scheduler = getServer().getScheduler();
@@ -607,6 +610,25 @@ public class Main extends JavaPlugin implements Listener {
         arena.scoreboard.getTeam("remainingCounter")
                 .setPrefix(ChatColor.GOLD + Integer.toString(arena.remainingEnemies));
         arena.scoreboard.getTeam("diffCounter").setPrefix(ChatColor.GOLD + Double.toString(arena.difficultyMultiplyer));
+    }
+
+    // * Kills all of the unused mobs
+    private void killAllUnused() {
+        // Gets all mobs
+        for (Arena arena : currentArenas) {
+            if (arena.players.size() == 0)
+                // Iterates through every entity
+                for (Entity en : arena.centerLocation.getWorld().getEntities()) {
+
+                    if (en.getScoreboardTags().contains(arena.arenaID)) {
+                        // Then means was from this arena
+                        en.remove();
+                        // Then can add to count
+
+                    }
+                }
+        }
+
     }
 
 }
