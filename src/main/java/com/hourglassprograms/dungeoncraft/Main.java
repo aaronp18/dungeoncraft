@@ -18,12 +18,13 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
-public class Main extends JavaPlugin {
+public class Main extends JavaPlugin implements Listener {
     ArrayList<Arena> currentArenas = new ArrayList<Arena>();
 
     @Override
@@ -34,6 +35,7 @@ public class Main extends JavaPlugin {
         loadArenas();
 
         getLogger().info("Dungeon Craft has loaded");
+        getServer().getPluginManager().registerEvents(this, this);
 
     }
 
@@ -54,8 +56,9 @@ public class Main extends JavaPlugin {
         for (Arena arena : currentArenas) {
             if (tags.contains(arena.arenaID)) {
                 // Then means was from this arena
-
+                // ToDo not upadting on kill
                 // Then update remaining num
+
                 updateRemaining();
 
             }
