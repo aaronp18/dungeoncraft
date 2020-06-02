@@ -509,17 +509,17 @@ public class Main extends JavaPlugin implements Listener {
             remainingText.setScore(8);
 
             Team remainingCounter = newArena.scoreboard.registerNewTeam("remainingCounter");
-            remainingCounter.addEntry(ChatColor.DARK_AQUA + "");
+            remainingCounter.addEntry(ChatColor.RED + "");
             remainingCounter.setPrefix(ChatColor.GOLD + "0");
-            objective.getScore(ChatColor.DARK_AQUA + "").setScore(7);
+            objective.getScore(ChatColor.RED + "").setScore(7);
 
             Score difficultyText = objective.getScore(ChatColor.DARK_AQUA + "Dificulty: ");
             difficultyText.setScore(6);
 
             Team diffCounter = newArena.scoreboard.registerNewTeam("diffCounter");
-            diffCounter.addEntry(ChatColor.DARK_AQUA + "");
+            diffCounter.addEntry(ChatColor.DARK_RED + "");
             diffCounter.setPrefix(ChatColor.GOLD + "0");
-            objective.getScore(ChatColor.DARK_AQUA + "").setScore(5);
+            objective.getScore(ChatColor.DARK_RED + "").setScore(5);
 
             currentArenas.add(newArena);
         }
