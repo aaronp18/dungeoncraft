@@ -67,3 +67,5 @@ LivingEntity spawnedMob = (LivingEntity) center.getWorld().spawnEntity(center,
 Wave: 
 Remaining Enemies:
 Difficulty:
+
+mvn clean compile  assembly:single

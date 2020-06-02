@@ -225,7 +225,7 @@ public class Main extends JavaPlugin implements Listener {
                     a.difficultyMultiplyer = difficultyMultiplyer;
                     a.dungeonName = dungeonName;
                     a.currentWave = 1;
-
+                    a.isWaiting = true;
                     // Displays scoreboard
                     a.player.setScoreboard(a.scoreboard);
                     updateScoreboard(a);
@@ -235,6 +235,7 @@ public class Main extends JavaPlugin implements Listener {
 
             // Creates DungeonTask
             BukkitScheduler scheduler = getServer().getScheduler();
+
             // * After 10 seconds, spawn first wave
             scheduler.scheduleSyncDelayedTask(this, new Runnable() {
                 @Override
@@ -253,13 +254,17 @@ public class Main extends JavaPlugin implements Listener {
     // * Spawns wave
     protected void spawnWave(String arenaID) {
         Arena arena = getArena(arenaID);
-        updateRemaining();
 
         arena.player.sendMessage(ChatColor.BOLD + "Starting wave: " + Integer.toString(arena.currentWave));
         String prefix = "dungeons." + arena.dungeonName + ".waves.wave" + Integer.toString(arena.currentWave);
 
         // Gets arena
+        for (Arena a : currentArenas) {
+            if (arena.arenaID.equals(arenaID)) {
+                a.isWaiting = false;
 
+            }
+        }
         // Iterates through each mob
         FileConfiguration config = this.getConfig();
         // Get all mobs in wave
@@ -273,7 +278,7 @@ public class Main extends JavaPlugin implements Listener {
             // Iterate through and comapare dungeon name
             for (String mob : mobs) {
                 Integer amount = (int) (config.getInt(prefix + "." + mob + ".amount") * arena.difficultyMultiplyer);
-                arena.player.sendMessage("Spawning: " + mob + " x " + amount);
+
                 for (int i = 0; i < amount; i++) {
                     Double spawnRadius = 10.0;
                     // Random += location
@@ -492,24 +497,29 @@ public class Main extends JavaPlugin implements Listener {
                     ChatColor.GOLD + "===== " + newArena.dungeonName + " =====");
             objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
-            Score waveText = objective.getScore(ChatColor.DARK_AQUA + "=== Current Wave ===");
-            waveText.setScore(4);
+            Score waveText = objective.getScore(ChatColor.DARK_AQUA + "Wave:");
+            waveText.setScore(10);
 
             Team waveCounter = newArena.scoreboard.registerNewTeam("waveCounter");
             waveCounter.addEntry(ChatColor.DARK_AQUA + "");
             waveCounter.setPrefix(ChatColor.GOLD + "0");
-            objective.getScore(ChatColor.DARK_AQUA + "").setScore(3);
+            objective.getScore(ChatColor.DARK_AQUA + "").setScore(9);
 
-            // Score score1 = objective.getScore(ChatColor.DARK_AQUA + "Wave: " +
-            // ChatColor.GREEN + 0);
+            Score remainingText = objective.getScore(ChatColor.DARK_AQUA + "Remaining: ");
+            waveText.setScore(8);
 
-            // score1.setScore(3);
-            // Score score2 = objective.getScore(ChatColor.DARK_AQUA + "Remaining Enemies: "
-            // + ChatColor.GREEN + 0);
-            // score2.setScore(2);
-            // Score score3 = objective.getScore(ChatColor.DARK_AQUA + "Difficulty: " +
-            // ChatColor.GREEN + "1.0");
-            // score3.setScore(1);
+            Team remainingCounter = newArena.scoreboard.registerNewTeam("remainingCounter");
+            remainingCounter.addEntry(ChatColor.DARK_AQUA + "");
+            remainingCounter.setPrefix(ChatColor.GOLD + "0");
+            objective.getScore(ChatColor.DARK_AQUA + "").setScore(7);
+
+            Score difficultyText = objective.getScore(ChatColor.DARK_AQUA + "Dificulty: ");
+            waveText.setScore(6);
+
+            Team diffCounter = newArena.scoreboard.registerNewTeam("diffCounter");
+            diffCounter.addEntry(ChatColor.DARK_AQUA + "");
+            diffCounter.setPrefix(ChatColor.GOLD + "0");
+            objective.getScore(ChatColor.DARK_AQUA + "").setScore(5);
 
             currentArenas.add(newArena);
         }
@@ -544,6 +554,7 @@ public class Main extends JavaPlugin implements Listener {
                     // Adds 1 to current wave
                     arena.currentWave++;
                     arena.isWaiting = true;
+                    arena.player.playSound(arena.centerLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.0f);
                     scheduler.scheduleSyncDelayedTask(this, new Runnable() {
                         @Override
                         public void run() {
@@ -561,6 +572,9 @@ public class Main extends JavaPlugin implements Listener {
     private void updateScoreboard(Arena arena) {
         arena.scoreboard.getTeam("waveCounter").setPrefix(
                 ChatColor.GOLD + Integer.toString(arena.currentWave) + " / " + Integer.toString(arena.totalWaves));
+        arena.scoreboard.getTeam("remainingCounter")
+                .setPrefix(ChatColor.GOLD + Integer.toString(arena.remainingEnemies));
+        arena.scoreboard.getTeam("diffCounter").setPrefix(ChatColor.GOLD + Double.toString(arena.difficultyMultiplyer));
     }
 
 }
