@@ -225,19 +225,20 @@ public class Main extends JavaPlugin implements Listener {
                     a.difficultyMultiplyer = difficultyMultiplyer;
                     a.dungeonName = dungeonName;
                     a.currentWave = 1;
-
+                    a.scoreboard = getScoreboard(a);
                     // Displays scoreboard
                     a.player.setScoreboard(a.scoreboard);
 
                 }
             }
-
+            updateRemaining();
             // Creates DungeonTask
             BukkitScheduler scheduler = getServer().getScheduler();
             // * After 10 seconds, spawn first wave
             scheduler.scheduleSyncDelayedTask(this, new Runnable() {
                 @Override
                 public void run() {
+
                     spawnWave(arena.arenaID);
                 }
             }, 100L);
@@ -251,6 +252,7 @@ public class Main extends JavaPlugin implements Listener {
     // * Spawns wave
     protected void spawnWave(String arenaID) {
         Arena arena = getArena(arenaID);
+        updateRemaining();
 
         arena.player.sendMessage(ChatColor.BOLD + "Starting wave: " + Integer.toString(arena.currentWave));
         String prefix = "dungeons." + arena.dungeonName + ".waves.wave" + Integer.toString(arena.currentWave);
