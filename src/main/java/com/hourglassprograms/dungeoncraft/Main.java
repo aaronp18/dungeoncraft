@@ -100,7 +100,7 @@ public class Main extends JavaPlugin implements Listener {
 
             } // *Create ArenaRoom - Requires dungeon name
             else if (cmd.getName().equalsIgnoreCase("create-arena")) {
-                if (player.hasPermission("dungeoncraft.arena.create")) { // Must have permission
+                if (player.hasPermission("dungeoncraft.arenas.create")) { // Must have permission
                     // Makes sure correct amount of arguments
                     if (args.length == 1) {
                         player.sendMessage(ChatColor.BOLD + "Creating Arena From your postion...");
@@ -141,8 +141,8 @@ public class Main extends JavaPlugin implements Listener {
 
             }
             // * Lists the arenas
-            else if (cmd.getName().equalsIgnoreCase("arena")) {
-                if (player.hasPermission("dungeoncraft.arena.list")) { // Must have permission
+            else if (cmd.getName().equalsIgnoreCase("arenas")) {
+                if (player.hasPermission("dungeoncraft.arenas.list")) { // Must have permission
                     // Makes sure correct amount of arguments
                     if (args.length == 0) {
                         updateRemaining();
