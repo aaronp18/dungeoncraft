@@ -1,5 +1,7 @@
 package com.hourglassprograms.dungeoncraft;
 
+import java.util.ArrayList;
+
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
@@ -13,6 +15,7 @@ public class Arena {
     Integer remainingEnemies = 0;
     Boolean isWaiting = false;
     Double difficultyMultiplyer = 1.0;
+    ArrayList<Player> players;
     Player player; // Add multiple
     Scoreboard scoreboard;
 }

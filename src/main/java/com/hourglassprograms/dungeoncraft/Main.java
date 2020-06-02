@@ -129,9 +129,22 @@ public class Main extends JavaPlugin implements Listener {
             else if (cmd.getName().equalsIgnoreCase("start-dungeon")) {
                 if (player.hasPermission("dungeoncraft.start")) { // Must have permission
                     // Makes sure correct amount of arguments
-                    if (args.length == 2) {
+                    if (args.length >= 2) {
                         player.sendMessage(ChatColor.BOLD + "Starting dungeon...");
-                        startDungeon(args[0], args[1], player);
+
+                        ArrayList<Player> players = new ArrayList<Player>();
+                        players.add(player);
+                        try {
+
+                            for (Integer i = 2; i < args.length; i++) {
+
+                                players.add(Bukkit.getPlayer(args[i]));
+                            }
+                        } catch (Exception e) {
+                            player.sendMessage("An error occured getting other players... Make sure they are online!");
+                        }
+
+                        startDungeon(args[0], args[1], players);
                         // Creates new dungeon config
                         return true;
                     } else {
@@ -205,23 +218,27 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     // * Starts dungeon
-    private void startDungeon(String dungeonName, String difficulty, Player player) {
+    private void startDungeon(String dungeonName, String difficulty, ArrayList<Player> players) {
         // Checks if theres an avaible Arena
         Arena arena = findAvailableArena(dungeonName);
         if (arena != null) {
 
             // Converts difficulty to multiplyer
             Double difficultyMultiplyer = convertDifficulty(difficulty);
-            player.sendMessage(ChatColor.GOLD + "Teleporting to arena " + arena.arenaID
-                    + " on difficulty multiplyer of: " + difficultyMultiplyer.toString() + "...");
-            // Tps Players to arena
-            player.teleport(arena.centerLocation);
+
+            for (Player player : players) {
+                player.sendMessage(ChatColor.GOLD + "Teleporting to arena " + arena.arenaID
+                        + " on difficulty multiplyer of: " + difficultyMultiplyer.toString() + "...");
+                // Tps Players to arena
+                player.teleport(arena.centerLocation);
+                player.setScoreboard(arena.scoreboard);
+            }
 
             // Updates the current arena with player
             for (Arena a : currentArenas) {
                 if (a.arenaID == arena.arenaID) {
                     // Then is current
-                    a.player = player;
+                    a.players = players;
                     a.difficultyMultiplyer = difficultyMultiplyer;
                     a.dungeonName = dungeonName;
                     a.currentWave = 1;
@@ -246,8 +263,11 @@ public class Main extends JavaPlugin implements Listener {
             }, 100L);
         } else {
             // Arena not found
-            player.sendMessage(ChatColor.BOLD + "" + ChatColor.RED + "Available arena not found for dungeon: "
-                    + dungeonName + ", please try again later or make a new one...");
+            for (Player player : players) {
+                player.sendMessage(ChatColor.BOLD + "" + ChatColor.RED + "Available arena not found for dungeon: "
+                        + dungeonName + ", please try again later or make a new one...");
+            }
+
         }
     }
 
@@ -255,7 +275,9 @@ public class Main extends JavaPlugin implements Listener {
     protected void spawnWave(String arenaID) {
         Arena arena = getArena(arenaID);
 
-        arena.player.sendMessage(ChatColor.BOLD + "Starting wave: " + Integer.toString(arena.currentWave));
+        for (Player player : arena.players) {
+            player.sendMessage(ChatColor.BOLD + "Starting wave: " + Integer.toString(arena.currentWave));
+        }
         String prefix = "dungeons." + arena.dungeonName + ".waves.wave" + Integer.toString(arena.currentWave);
 
         // Gets arena
@@ -274,7 +296,10 @@ public class Main extends JavaPlugin implements Listener {
 
         try {
             // Play lightning sound
-            arena.player.playSound(arena.centerLocation, Sound.ENTITY_WITHER_SPAWN, 1.0f, 1.0f);
+            for (Player player : arena.players) {
+                player.playSound(arena.centerLocation, Sound.ENTITY_WITHER_SPAWN, 1.0f, 1.0f);
+            }
+
             // Iterate through and comapare dungeon name
             for (String mob : mobs) {
                 Integer amount = (int) (config.getInt(prefix + "." + mob + ".amount") * arena.difficultyMultiplyer);
@@ -314,8 +339,8 @@ public class Main extends JavaPlugin implements Listener {
                         }
                     }
 
-                    String command = "execute at " + arena.player.getName() + " run summon minecraft:" + mob + " "
-                            + spawnX + " " + spawnY + " " + spawnZ + " " + nbtString;
+                    String command = "execute at " + arena.players.get(0).getName() + " run summon minecraft:" + mob
+                            + " " + spawnX + " " + spawnY + " " + spawnZ + " " + nbtString;
 
                     // Spawns each mob
                     Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
@@ -327,7 +352,10 @@ public class Main extends JavaPlugin implements Listener {
 
         Exception e) {
             // TO DO: handle exception
-            arena.player.sendMessage("An error has occured... Perhaps the config is broken?");
+            for (Player player : arena.players) {
+                player.sendMessage("An error has occured... Perhaps the config is broken?");
+            }
+
             getLogger().info("An error has occured spawning wave: " + e.getMessage());
         }
         // +- random amount
@@ -488,7 +516,6 @@ public class Main extends JavaPlugin implements Listener {
             newArena.currentWave = 0;
             newArena.totalWaves = config.getInt("dungeons." + newArena.dungeonName + ".wave-count");
             newArena.remainingEnemies = 0;
-            newArena.player = null;
 
             // Sets up scoreboard for arena
             newArena.scoreboard = manager.getNewScoreboard();
@@ -548,10 +575,14 @@ public class Main extends JavaPlugin implements Listener {
             if (arena.remainingEnemies == 0 && arena.currentWave != 0 && !arena.isWaiting) {
                 // The wave ended
                 if (arena.currentWave < arena.totalWaves) {
-                    arena.player.playSound(arena.centerLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.0f);
+                    for (Player player : arena.players) {
+                        player.playSound(arena.centerLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.0f);
+                        arena.player.sendMessage(ChatColor.BOLD + "Wave " + arena.currentWave + " complete.");
+                    }
+
                     BukkitScheduler scheduler = getServer().getScheduler();
                     // * After 5 seconds, spawn next wave
-                    arena.player.sendMessage(ChatColor.BOLD + "Wave " + arena.currentWave + " complete.");
+
                     // Adds 1 to current wave
                     arena.currentWave++;
                     arena.isWaiting = true;
