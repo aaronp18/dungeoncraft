@@ -506,7 +506,7 @@ public class Main extends JavaPlugin implements Listener {
             objective.getScore(ChatColor.DARK_AQUA + "").setScore(9);
 
             Score remainingText = objective.getScore(ChatColor.DARK_AQUA + "Remaining: ");
-            waveText.setScore(8);
+            remainingText.setScore(8);
 
             Team remainingCounter = newArena.scoreboard.registerNewTeam("remainingCounter");
             remainingCounter.addEntry(ChatColor.DARK_AQUA + "");
@@ -514,7 +514,7 @@ public class Main extends JavaPlugin implements Listener {
             objective.getScore(ChatColor.DARK_AQUA + "").setScore(7);
 
             Score difficultyText = objective.getScore(ChatColor.DARK_AQUA + "Dificulty: ");
-            waveText.setScore(6);
+            difficultyText.setScore(6);
 
             Team diffCounter = newArena.scoreboard.registerNewTeam("diffCounter");
             diffCounter.addEntry(ChatColor.DARK_AQUA + "");
@@ -548,13 +548,14 @@ public class Main extends JavaPlugin implements Listener {
             if (arena.remainingEnemies == 0 && arena.currentWave != 0 && !arena.isWaiting) {
                 // The wave ended
                 if (arena.currentWave < arena.totalWaves) {
+                    arena.player.playSound(arena.centerLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.0f);
                     BukkitScheduler scheduler = getServer().getScheduler();
                     // * After 5 seconds, spawn next wave
                     arena.player.sendMessage(ChatColor.BOLD + "Wave " + arena.currentWave + " complete.");
                     // Adds 1 to current wave
                     arena.currentWave++;
                     arena.isWaiting = true;
-                    arena.player.playSound(arena.centerLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.0f);
+
                     scheduler.scheduleSyncDelayedTask(this, new Runnable() {
                         @Override
                         public void run() {
