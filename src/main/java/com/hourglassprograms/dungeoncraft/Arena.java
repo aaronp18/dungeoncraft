@@ -2,6 +2,7 @@ package com.hourglassprograms.dungeoncraft;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.Scoreboard;
 
 public class Arena {
     String dungeonName;
@@ -12,4 +13,5 @@ public class Arena {
     Integer remainingEnemies = 0;
     Double difficultyMultiplyer = 1.0;
     Player player; // Add multiple
+    Scoreboard scoreboard;
 }

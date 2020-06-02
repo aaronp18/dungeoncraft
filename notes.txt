@@ -61,3 +61,9 @@ arenas:
     z: 242.75329662468366
 LivingEntity spawnedMob = (LivingEntity) center.getWorld().spawnEntity(center,
                         EntityType.valueOf(mob.toUpperCase()));
+
+
+== Dung1 ==
+Wave: 
+Remaining Enemies:
+Difficulty:

@@ -22,6 +22,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.util.Vector;
 
 public class Main extends JavaPlugin implements Listener {
@@ -219,6 +223,9 @@ public class Main extends JavaPlugin implements Listener {
                     a.difficultyMultiplyer = difficultyMultiplyer;
                     a.dungeonName = dungeonName;
                     a.currentWave = 1;
+
+                    // Displays scoreboard
+                    a.player.setScoreboard(a.scoreboard);
 
                 }
             }
@@ -459,6 +466,9 @@ public class Main extends JavaPlugin implements Listener {
 
         Set<String> ids = arenas.getKeys(false);
 
+        // Gets scoreboard manager
+        ScoreboardManager manager = Bukkit.getScoreboardManager();
+
         // Iterate through and add to current arenas with value = 0 (available)
         for (String id : ids) {
             Arena newArena = new Arena();
@@ -469,6 +479,20 @@ public class Main extends JavaPlugin implements Listener {
             newArena.totalWaves = config.getInt("dungeons." + newArena.dungeonName + ".wave-count");
             newArena.remainingEnemies = 0;
             newArena.player = null;
+
+            // Sets up scoreboard for arena
+            newArena.scoreboard = manager.getNewScoreboard();
+
+            Objective objective = newArena.scoreboard.registerNewObjective(newArena.arenaID, "dummy",
+                    ChatColor.GOLD + "=== " + newArena.dungeonName + " ===");
+            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+
+            Score score1 = objective.getScore(ChatColor.DARK_AQUA + "Wave: " + ChatColor.GREEN + 0);
+            score1.setScore(3);
+            Score score2 = objective.getScore(ChatColor.DARK_AQUA + "Remaining Enemies" + ChatColor.GREEN + 0);
+            score2.setScore(2);
+            Score score3 = objective.getScore(ChatColor.DARK_AQUA + "Difficulty" + ChatColor.GREEN + "1.0");
+            score3.setScore(1);
 
             currentArenas.add(newArena);
         }
@@ -509,6 +533,9 @@ public class Main extends JavaPlugin implements Listener {
                     }, 100L);
                 }
             }
+
+            // Update scoreboard
+
         }
 
     }
