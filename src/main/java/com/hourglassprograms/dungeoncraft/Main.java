@@ -27,8 +27,8 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
+import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
-import org.jetbrains.annotations.NotNull;
 
 public class Main extends JavaPlugin implements Listener {
     ArrayList<Arena> currentArenas = new ArrayList<Arena>();
@@ -225,13 +225,14 @@ public class Main extends JavaPlugin implements Listener {
                     a.difficultyMultiplyer = difficultyMultiplyer;
                     a.dungeonName = dungeonName;
                     a.currentWave = 1;
-                    a.scoreboard = getScoreboard(a);
+
                     // Displays scoreboard
                     a.player.setScoreboard(a.scoreboard);
+                    updateScoreboard(a);
 
                 }
             }
-            updateRemaining();
+
             // Creates DungeonTask
             BukkitScheduler scheduler = getServer().getScheduler();
             // * After 10 seconds, spawn first wave
@@ -488,16 +489,27 @@ public class Main extends JavaPlugin implements Listener {
             newArena.scoreboard = manager.getNewScoreboard();
 
             Objective objective = newArena.scoreboard.registerNewObjective(newArena.arenaID, "dummy",
-                    ChatColor.GOLD + "=== " + newArena.dungeonName + " ===");
+                    ChatColor.GOLD + "===== " + newArena.dungeonName + " =====");
             objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
-            Score score1 = objective.getScore(ChatColor.DARK_AQUA + "Wave: " + ChatColor.GREEN + 0);
+            Score waveText = objective.getScore(ChatColor.DARK_AQUA + "=== Current Wave ===");
+            waveText.setScore(4);
 
-            score1.setScore(3);
-            Score score2 = objective.getScore(ChatColor.DARK_AQUA + "Remaining Enemies: " + ChatColor.GREEN + 0);
-            score2.setScore(2);
-            Score score3 = objective.getScore(ChatColor.DARK_AQUA + "Difficulty: " + ChatColor.GREEN + "1.0");
-            score3.setScore(1);
+            Team waveCounter = newArena.scoreboard.registerNewTeam("waveCounter");
+            waveCounter.addEntry(ChatColor.DARK_AQUA + "");
+            waveCounter.setPrefix(ChatColor.GOLD + "0");
+            objective.getScore(ChatColor.DARK_AQUA + "").setScore(3);
+
+            // Score score1 = objective.getScore(ChatColor.DARK_AQUA + "Wave: " +
+            // ChatColor.GREEN + 0);
+
+            // score1.setScore(3);
+            // Score score2 = objective.getScore(ChatColor.DARK_AQUA + "Remaining Enemies: "
+            // + ChatColor.GREEN + 0);
+            // score2.setScore(2);
+            // Score score3 = objective.getScore(ChatColor.DARK_AQUA + "Difficulty: " +
+            // ChatColor.GREEN + "1.0");
+            // score3.setScore(1);
 
             currentArenas.add(newArena);
         }
@@ -539,26 +551,14 @@ public class Main extends JavaPlugin implements Listener {
                 }
             }
 
-            // Update scoreboard
-            arena.player.setScoreboard(getScoreboard(arena));
+            updateScoreboard(arena);
         }
 
     }
 
-    private @NotNull Scoreboard getScoreboard(Arena arena) {
-        Objective objective = arena.scoreboard.registerNewObjective(arena.arenaID, "dummy",
-                ChatColor.GOLD + "=== " + arena.dungeonName + " ===");
-        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-
-        Score score1 = objective.getScore(ChatColor.DARK_AQUA + "Wave: " + ChatColor.GREEN + arena.currentWave);
-
-        score1.setScore(3);
-        Score score2 = objective
-                .getScore(ChatColor.DARK_AQUA + "Remaining Enemies: " + ChatColor.GREEN + arena.remainingEnemies);
-        score2.setScore(2);
-        Score score3 = objective
-                .getScore(ChatColor.DARK_AQUA + "Difficulty: " + ChatColor.GREEN + arena.difficultyMultiplyer);
-        score3.setScore(1);
-        return arena.scoreboard;
+    private void updateScoreboard(Arena arena) {
+        arena.scoreboard.getTeam("waveCounter").setPrefix(
+                ChatColor.GOLD + Integer.toString(arena.currentWave) + " / " + Integer.toString(arena.totalWaves));
     }
+
 }
