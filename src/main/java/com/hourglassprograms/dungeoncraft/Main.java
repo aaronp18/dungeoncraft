@@ -533,8 +533,9 @@ public class Main extends JavaPlugin implements Listener {
 
                 }
             }
+            updateScoreboard(arena);
             // If 0, and running, then start next wave
-            if (arena.remainingEnemies == 0 && arena.currentWave != 0) {
+            if (arena.remainingEnemies == 0 && arena.currentWave != 0 && !arena.isWaiting) {
                 // The wave ended
                 if (arena.currentWave < arena.totalWaves) {
                     BukkitScheduler scheduler = getServer().getScheduler();
@@ -542,16 +543,17 @@ public class Main extends JavaPlugin implements Listener {
                     arena.player.sendMessage(ChatColor.BOLD + "Wave " + arena.currentWave + " complete.");
                     // Adds 1 to current wave
                     arena.currentWave++;
+                    arena.isWaiting = true;
                     scheduler.scheduleSyncDelayedTask(this, new Runnable() {
                         @Override
                         public void run() {
+                            arena.isWaiting = false;
                             spawnWave(arena.arenaID);
                         }
                     }, 100L);
                 }
             }
 
-            updateScoreboard(arena);
         }
 
     }

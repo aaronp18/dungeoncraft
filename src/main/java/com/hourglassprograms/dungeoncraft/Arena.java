@@ -11,6 +11,7 @@ public class Arena {
     Integer currentWave = 0;
     Integer totalWaves;
     Integer remainingEnemies = 0;
+    Boolean isWaiting = false;
     Double difficultyMultiplyer = 1.0;
     Player player; // Add multiple
     Scoreboard scoreboard;
