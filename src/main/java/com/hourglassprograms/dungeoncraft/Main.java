@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -21,6 +22,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scoreboard.DisplaySlot;
@@ -671,9 +673,9 @@ public class Main extends JavaPlugin implements Listener {
 
             // Saves Location
             config.set(prefix + "world", locale.getWorld().getName());
-            config.set(prefix + "x", locale.getX());
-            config.set(prefix + "y", locale.getY());
-            config.set(prefix + "z", locale.getZ());
+            config.set(prefix + "x", locale.getBlockX());
+            config.set(prefix + "y", locale.getBlockY());
+            config.set(prefix + "z", locale.getBlockZ());
             // Creates new arena in config
 
             this.saveConfig();
@@ -752,6 +754,13 @@ public class Main extends JavaPlugin implements Listener {
             config.set(wavePrefix + "nbt",
                     "{HandItems:[{id:iron_sword,Count:1}],HandDropChances:[0.00F],ArmorItems:[{id:chainmail_boots,Count:1},{id:chainmail_leggings,Count:1},{id:chainmail_chestplate,Count:1},{id:chainmail_helmet,Count:1}],Attributes:[{Name:\"generic.maxHealth\",Base:20.0F}],ArmorDropChances:[0F,0F,0F,0F]}");
         }
+
+        config.set(prefix + "rewards." + "diamond." + "count", 1);
+        config.set(prefix + "rewards." + "diamond." + "spread", false);
+
+        config.set(prefix + "rewards." + "command." + "count", 1);
+        config.set(prefix + "rewards." + "command." + "spread", false);
+        config.set(prefix + "rewards." + "command." + "command", "give $player$ stone $count$");
 
         this.saveConfig();
 
@@ -1036,6 +1045,7 @@ public class Main extends JavaPlugin implements Listener {
                                 + arena.dungeonName + "!!!");
                         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "Here is your prize, well done");
                         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+                        giveLoot(arena);
                     }
 
                 }
@@ -1087,6 +1097,92 @@ public class Main extends JavaPlugin implements Listener {
 
             }
         }
+    }
+
+    public void giveLoot(Arena arena) {
+        // Gets loot config
+        FileConfiguration config = this.getConfig();
+
+        ConfigurationSection rewards = config.getConfigurationSection("rewards");
+
+        Set<String> rewardNames = rewards.getKeys(false);
+
+        for (String rewardName : rewardNames) {
+            if (rewardName.equalsIgnoreCase("command")) {
+                // Then will run command
+
+                // Checks that it exists
+                if (rewards.contains(rewardName + "." + "command")) {
+
+                    // Set amount
+                    Double count = new Double(rewards.getInt(rewardName + ".count"));
+                    Integer countInt;
+
+                    // If spread, then changes amount per person
+                    if (rewards.getBoolean(rewardName + ".spread")) {
+                        // Amount * difficulty multiplyer
+                        count = count * arena.difficultyMultiplyer;
+                        // divide by number of players, round up.
+                        count = count / arena.players.size();
+
+                        countInt = (int) Math.ceil(count);
+                    } else {
+                        count = count * arena.difficultyMultiplyer;
+
+                        countInt = (int) Math.round(count);
+                    }
+
+                    for (Player player : arena.players) {
+                        String command = rewards.getString(rewardName + "." + "command");
+
+                        command = command.replace("$player$", player.getName());
+                        command = command.replace("$count$", Integer.toString(countInt));
+
+                        getLogger().info("Executing: " + command);
+                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+
+                    }
+                } else {
+                    getLogger().info("Cannot reward with command (command not found)");
+                }
+            } else {
+                // Will be giving rewardName as item
+                Material itemMaterial = Material.getMaterial(rewardName.toUpperCase());
+                if (itemMaterial == null) {
+                    // Item doesnt exist
+                    getLogger().info("\"" + rewardName + "\" does not exist..");
+                } else {
+                    ItemStack itemStack = new ItemStack(itemMaterial);
+                    // Set amount
+                    Double count = new Double(rewards.getInt(rewardName + ".count"));
+                    Integer countInt;
+
+                    // If spread, then changes amount per person
+                    if (rewards.getBoolean(rewardName + ".spread")) {
+                        // Amount * difficulty multiplyer
+                        count = count * arena.difficultyMultiplyer;
+                        // divide by number of players, round up.
+                        count = count / arena.players.size();
+
+                        countInt = (int) Math.ceil(count);
+                    } else {
+                        count = count * arena.difficultyMultiplyer;
+
+                        countInt = (int) Math.round(count);
+                    }
+
+                    itemStack.setAmount(countInt);
+                    for (Player player : arena.players) {
+
+                        player.getInventory().addItem(itemStack);
+                    }
+                }
+            }
+        }
+        // Iterates through
+
+        // Checks if is per person
+
     }
 
 }

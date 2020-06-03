@@ -46,6 +46,14 @@ dungeons:
           health: 20
           amount: 5
           damage: 20
+     rewards:
+      diamond:
+        count: 2
+        spread: false
+      command:
+        count: 1
+        spread: false
+        command: give $player$ $count$ 
 arenas:
   arena1:
     dungeon-name: Dung1
