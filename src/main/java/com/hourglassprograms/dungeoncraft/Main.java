@@ -1103,7 +1103,7 @@ public class Main extends JavaPlugin implements Listener {
         // Gets loot config
         FileConfiguration config = this.getConfig();
 
-        ConfigurationSection rewards = config.getConfigurationSection("rewards");
+        ConfigurationSection rewards = config.getConfigurationSection("dungeons." + arena.dungeonName + ".rewards");
 
         Set<String> rewardNames = rewards.getKeys(false);
 
