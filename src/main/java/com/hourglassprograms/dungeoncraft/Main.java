@@ -149,8 +149,6 @@ public class Main extends JavaPlugin implements Listener {
                             startDungeon(args[0], args[1], players);
                         }
 
-                        player.sendMessage(ChatColor.BOLD + "Starting dungeon...");
-
                         // Creates new dungeon config
                         return true;
                     } else {
@@ -171,9 +169,9 @@ public class Main extends JavaPlugin implements Listener {
                     // Makes sure correct amount of arguments
                     if (args.length == 0) {
                         updateRemaining();
-                        player.sendMessage(ChatColor.BOLD + "===== Arenas (" + _currentArenas.size() + ")" + "=====");
+                        player.sendMessage(ChatColor.BOLD + "===== Arenas (" + _currentArenas.size() + ")" + " =====");
                         for (Arena arena : _currentArenas) {
-                            player.sendMessage(ChatColor.GOLD + "===== " + arena.arenaID + "=====");
+                            player.sendMessage(ChatColor.GOLD + "===== " + arena.arenaID + " =====");
                             player.sendMessage(ChatColor.DARK_AQUA + "- Dungeon Name: " + arena.dungeonName);
                             player.sendMessage(ChatColor.DARK_AQUA + "- Location: ");
                             player.sendMessage(ChatColor.DARK_AQUA + "      World: "
@@ -289,20 +287,7 @@ public class Main extends JavaPlugin implements Listener {
                             return true;
 
                         } else if (args[0].equals("leave") || args[0].equals("exit")) {
-                            // Checks if player is in a party
-                            if (!isInParty(player)) {
-                                // Not in a party
-                                player.sendMessage(ChatColor.RED + "You are not in a party");
-
-                            } else {
-                                Integer index = getPartyIndex(player);
-                                Party party = _parties.get(index);
-                                party.members.remove(player);
-
-                                player.sendMessage(ChatColor.GOLD + "You have left the party");
-                                party.leader.sendMessage(ChatColor.GOLD + player.getName() + " has left the party");
-
-                            }
+                            partyLeave(player);
                             return true;
 
                         }
@@ -405,6 +390,7 @@ public class Main extends JavaPlugin implements Listener {
     // * Starts dungeon
     private void startDungeon(String dungeonName, String difficulty, ArrayList<Player> players) {
         // Checks if theres an avaible Arena
+
         Arena arena = findAvailableArena(dungeonName);
         if (arena != null) {
 
@@ -412,6 +398,7 @@ public class Main extends JavaPlugin implements Listener {
             Double difficultyMultiplyer = convertDifficulty(difficulty);
 
             for (Player player : players) {
+                player.sendMessage(ChatColor.BOLD + "Starting dungeon!");
                 player.sendMessage(ChatColor.GOLD + "Teleporting to arena " + arena.arenaID
                         + " on difficulty multiplyer of: " + difficultyMultiplyer.toString() + "...");
                 // Tps Players to arena
@@ -754,6 +741,41 @@ public class Main extends JavaPlugin implements Listener {
             }
         }
         return false;
+    }
+
+    // * Party leave
+    public void partyLeave(Player player) {
+
+        // Checks if player is in a party
+        if (!isInParty(player)) {
+            // Not in a party
+            player.sendMessage(ChatColor.RED + "You are not in a party");
+
+        } else {
+            Integer index = getPartyIndex(player);
+            Party party = _parties.get(index);
+            party.members.remove(player);
+
+            if (party.leader.equals(player)) {
+                // Then was leader so choose new leader
+                if (party.members.size() > 0) {
+                    // Atleast one person in party
+                    // Assign new leader
+                    party.leader = party.members.get(0);
+
+                    party.leader.sendMessage(ChatColor.GOLD + player.getName() + " has left the party");
+                    party.leader.sendMessage(ChatColor.GOLD + "You are now the party leader.");
+                    party.leader.playSound(party.leader.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+
+                } else {
+                    // Empty party so disbandan
+                    _parties.remove(party);
+                }
+            }
+
+            player.sendMessage(ChatColor.GOLD + "You have left the party");
+
+        }
     }
 
     // *Gets random double
