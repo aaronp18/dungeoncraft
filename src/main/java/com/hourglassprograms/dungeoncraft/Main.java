@@ -20,6 +20,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scoreboard.DisplaySlot;
@@ -67,13 +68,48 @@ public class Main extends JavaPlugin implements Listener {
         for (Arena arena : _currentArenas) {
             if (tags.contains(arena.arenaID)) {
                 // Then means was from this arena
-                // ToDo not upadting on kill
+
                 // Then update remaining num
 
                 updateRemaining();
 
             }
         }
+    }
+
+    // * Listener for when players quit so they can be removed from arenas etc
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        // Called when a player leaves a server
+        Player player = event.getPlayer();
+        String quitMessage = event.getQuitMessage();
+
+        // Removes iteself from an arena member list
+        for (Arena arena : _currentArenas) {
+            boolean toRemove = false;
+            if (arena.players != null) {
+                for (Player p : arena.players) {
+                    if (p.getName().equals(player.getName())) {
+                        // Remove from arena
+                        toRemove = true;
+
+                    }
+                }
+                if (toRemove) {
+                    arena.players.remove(player);
+                }
+
+                // Checks if arena is empty
+                if (arena.players.size() == 0) {
+                    // Then is empty, so reset to wave 0
+                    killAllUnused();
+                    arena.currentWave = 0;
+                }
+            }
+        }
+
+        // Removes from party
+        partyLeave(player);
     }
 
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -396,6 +432,8 @@ public class Main extends JavaPlugin implements Listener {
 
             // Converts difficulty to multiplyer
             Double difficultyMultiplyer = convertDifficulty(difficulty);
+            // Changes the multiplyer depending on number of players
+            difficultyMultiplyer = difficultyMultiplyer * (1.0 + (0.5 * (players.size() - 1)));
 
             for (Player player : players) {
                 player.sendMessage(ChatColor.BOLD + "Starting dungeon!");
@@ -642,6 +680,7 @@ public class Main extends JavaPlugin implements Listener {
             config.set(wavePrefix + "nbt",
                     "{HandItems:[{id:iron_sword,Count:1}],HandDropChances:[0.00F],ArmorItems:[{id:chainmail_boots,Count:1},{id:chainmail_leggings,Count:1},{id:chainmail_chestplate,Count:1},{id:chainmail_helmet,Count:1}],Attributes:[{Name:\"generic.maxHealth\",Base:20.0F}],ArmorDropChances:[0F,0F,0F,0F]}");
         }
+
         this.saveConfig();
 
     }
@@ -886,6 +925,15 @@ public class Main extends JavaPlugin implements Listener {
                             spawnWave(arena.arenaID);
                         }
                     }, 100L);
+                } else {
+                    // Then has reached the end
+                    for (Player player : arena.players) {
+                        player.playSound(arena.centerLocation, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                        player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "Congratulations! You have completed "
+                                + arena.dungeonName + "!!!");
+                        player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "Here is your prize, well done");
+                    }
+
                 }
             }
 
