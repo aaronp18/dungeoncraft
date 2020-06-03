@@ -37,13 +37,14 @@ This means that you can design 1 **Dungeon** with a set of custom waves which ca
  - Once you have finished with configuring, simply do `/dc-reload` to load the new config onto the server.
  
  ## Commands:
- - `/create-dungeon <dungeon name> [wave count]` - Used to generate a new Dungeon in `config.yml`. The wave count is how many waves are generated.
- - `/create-arena <dungeon name> [spawn radius]` - Used to create a new arena from the players current position. This location will then be linked to the Dungeon inputted. The spawn radius (default: 10) changes the radius at which mobs spawn.
- - `/arenas` - Simply lists all the arenas that have been made along with their location and current status. 
- - `/start-dungeon <dungeon name> <difficulty (easy / hard)>` - Starts a dungeon with the current members in the party. 
- - `/dc-reload` - Used to reload the config into the game. This will reset any game in progress so be careful!
+ - `/create-dungeon <dungeon name> [wave count]` - Used to generate a new Dungeon in `config.yml`. The wave count is how many waves are generated. Permission required:  `(dungeoncraft.dungeon.create)`
+ - `/create-arena <dungeon name> [spawn radius]` - Used to create a new arena from the players current position. This location will then be linked to the Dungeon inputted. The spawn radius (default: 10) changes the radius at which mobs spawn. Permission required: `(dungeoncraft.arenas.create)`
+ - `/arenas` - Simply lists all the arenas that have been made along with their location and current status. Permission required:  `(dungeoncraft.arenas.list)`
+ - `/start-dungeon <dungeon name> <difficulty (easy / hard)>` - Starts a dungeon with the current members in the party. Permission required:  `(dungeoncraft.start)`
+ - `/dc-reload` - Used to reload the config into the game. This will reset any game in progress so be careful! Permission required:  `(dungeoncraft.reload)`
  
- #### Parties:
+ #### Parties: 
+ ###### Permission required:  `(dungeoncraft.party)`
  - `/party create` - Creates a new party
  - `/party invite <player name>` - Invites player to party
  - `/party accept` - Accepts the invite
