@@ -15,6 +15,6 @@ public class Arena {
     Integer remainingEnemies = 0;
     Boolean isWaiting = false;
     Double difficultyMultiplyer = 1.0;
-    ArrayList<Player> players;
+    ArrayList<Player> players = null;
     Scoreboard scoreboard;
 }

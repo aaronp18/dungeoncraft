@@ -40,10 +40,10 @@ public class Main extends JavaPlugin implements Listener {
         // Load Current Arenas
         loadArenas();
 
-        killAllUnused();
-
         getLogger().info("Dungeon Craft has loaded");
         getServer().getPluginManager().registerEvents(this, this);
+
+        killAllUnused();
 
     }
 
@@ -612,23 +612,44 @@ public class Main extends JavaPlugin implements Listener {
         arena.scoreboard.getTeam("diffCounter").setPrefix(ChatColor.GOLD + Double.toString(arena.difficultyMultiplyer));
     }
 
-    // * Kills all of the unused mobs
+    // * Kills all of the unused mobs with no players in that arena
     private void killAllUnused() {
         // Gets all mobs
+
         for (Arena arena : currentArenas) {
-            if (arena.players.size() == 0)
+            // Means if there are players
+
+            if (arena.players != null) {
+                // If size = 0, then player has left
+                if (arena.players.size() == 0)
+                    // Iterates through every entity
+                    for (Entity en : arena.centerLocation.getWorld().getEntities()) {
+
+                        if (en.getScoreboardTags().contains(arena.arenaID)) {
+                            // Then means was from this arena
+                            en.remove();
+
+                            // Then can add to count
+
+                        }
+                    }
+            }
+            // Has reloaded
+            else {
                 // Iterates through every entity
                 for (Entity en : arena.centerLocation.getWorld().getEntities()) {
 
                     if (en.getScoreboardTags().contains(arena.arenaID)) {
                         // Then means was from this arena
                         en.remove();
+
                         // Then can add to count
 
                     }
                 }
-        }
 
+            }
+        }
     }
 
 }
