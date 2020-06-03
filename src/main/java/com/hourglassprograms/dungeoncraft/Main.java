@@ -125,10 +125,17 @@ public class Main extends JavaPlugin implements Listener {
                 if (player.hasPermission("dungeoncraft.dungeon.create")) { // Must have permission
                     // Makes sure correct amount of arguments
                     if (args.length == 1) {
-                        player.sendMessage(ChatColor.BOLD + "Creating dungeon...");
-                        // Creates Dungeon
-                        createDungeon(args[0]);
-                        // Creates new dungeon config
+                        // Checks if a dungeon already exists
+                        if (getConfig().contains("dungeons." + args[0])) {
+                            // Already exsits
+                            player.sendMessage(ChatColor.RED + "This dungeon already exsits...");
+                        } else {
+                            player.sendMessage(ChatColor.BOLD + "Creating dungeon...");
+                            // Creates Dungeon
+                            createDungeon(args[0]);
+
+                        }
+
                         return true;
 
                     } else {
@@ -205,20 +212,27 @@ public class Main extends JavaPlugin implements Listener {
                     // Makes sure correct amount of arguments
                     if (args.length == 0) {
                         updateRemaining();
-                        player.sendMessage(ChatColor.BOLD + "===== Arenas (" + _currentArenas.size() + ")" + " =====");
-                        for (Arena arena : _currentArenas) {
-                            player.sendMessage(ChatColor.GOLD + "===== " + arena.arenaID + " =====");
-                            player.sendMessage(ChatColor.DARK_AQUA + "- Dungeon Name: " + arena.dungeonName);
-                            player.sendMessage(ChatColor.DARK_AQUA + "- Location: ");
-                            player.sendMessage(ChatColor.DARK_AQUA + "      World: "
-                                    + arena.centerLocation.getWorld().getName() + " X: "
-                                    + arena.centerLocation.getBlockX() + " Y: " + arena.centerLocation.getBlockY()
-                                    + " Z: " + arena.centerLocation.getBlockZ());
+                        if (_currentArenas.size() == 0) {
+                            player.sendMessage(ChatColor.RED + "There are currently no created arenas...");
+                        } else {
+                            player.sendMessage(
+                                    ChatColor.BOLD + "===== Arenas (" + _currentArenas.size() + ")" + " =====");
+                            for (Arena arena : _currentArenas) {
+                                player.sendMessage(ChatColor.GOLD + "===== " + arena.arenaID + " =====");
+                                player.sendMessage(ChatColor.DARK_AQUA + "- Dungeon Name: " + arena.dungeonName);
+                                player.sendMessage(ChatColor.DARK_AQUA + "- Location: ");
+                                player.sendMessage(ChatColor.DARK_AQUA + "      World: "
+                                        + arena.centerLocation.getWorld().getName() + " X: "
+                                        + arena.centerLocation.getBlockX() + " Y: " + arena.centerLocation.getBlockY()
+                                        + " Z: " + arena.centerLocation.getBlockZ());
 
-                            player.sendMessage(ChatColor.DARK_AQUA + "- Current Wave: " + arena.currentWave);
-                            player.sendMessage(ChatColor.DARK_AQUA + "- Remaining Enemies: " + arena.remainingEnemies);
+                                player.sendMessage(ChatColor.DARK_AQUA + "- Current Wave: " + arena.currentWave);
+                                player.sendMessage(
+                                        ChatColor.DARK_AQUA + "- Remaining Enemies: " + arena.remainingEnemies);
 
+                            }
                         }
+
                         return true;
                     } else {
                         // Incorrect amount of args
@@ -631,8 +645,8 @@ public class Main extends JavaPlugin implements Listener {
 
         // Checks if dungeon exists
         if (config.contains("dungeons." + dungeonName)) {
-            String ID = UUID.randomUUID().toString();
-            String prefix = "arenas." + ID + "."; // Make multiple arenas per dungeon
+            String arenaID = generateArenaName(dungeonName);
+            String prefix = "arenas." + arenaID + "."; // Make multiple arenas per dungeon
             config.set(prefix + "dungeon-name", dungeonName);
             // Gets location
             Location locale = player.getLocation();
@@ -648,16 +662,50 @@ public class Main extends JavaPlugin implements Listener {
 
             // Load into object
             Arena newArena = new Arena();
-            newArena.arenaID = ID;
+            newArena.arenaID = arenaID;
             newArena.centerLocation = locale;
             newArena.dungeonName = dungeonName;
             newArena.currentWave = 0;
+            newArena.totalWaves = config.getInt("dungeons." + newArena.dungeonName + ".wave-count");
+            newArena.remainingEnemies = 0;
+
+            // Sets up scoreboard for arena
+            ScoreboardManager manager = Bukkit.getScoreboardManager();
+            newArena.scoreboard = manager.getNewScoreboard();
+
+            Objective objective = newArena.scoreboard.registerNewObjective(newArena.arenaID, "dummy",
+                    ChatColor.GOLD + "===== " + newArena.dungeonName + " =====");
+            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+
+            Score waveText = objective.getScore(ChatColor.DARK_AQUA + "Wave:");
+            waveText.setScore(10);
+
+            Team waveCounter = newArena.scoreboard.registerNewTeam("waveCounter");
+            waveCounter.addEntry(ChatColor.DARK_AQUA + "");
+            waveCounter.setPrefix(ChatColor.GOLD + "0");
+            objective.getScore(ChatColor.DARK_AQUA + "").setScore(9);
+
+            Score remainingText = objective.getScore(ChatColor.DARK_AQUA + "Remaining: ");
+            remainingText.setScore(8);
+
+            Team remainingCounter = newArena.scoreboard.registerNewTeam("remainingCounter");
+            remainingCounter.addEntry(ChatColor.RED + "");
+            remainingCounter.setPrefix(ChatColor.GOLD + "0");
+            objective.getScore(ChatColor.RED + "").setScore(7);
+
+            Score difficultyText = objective.getScore(ChatColor.DARK_AQUA + "Dificulty: ");
+            difficultyText.setScore(6);
+
+            Team diffCounter = newArena.scoreboard.registerNewTeam("diffCounter");
+            diffCounter.addEntry(ChatColor.DARK_RED + "");
+            diffCounter.setPrefix(ChatColor.GOLD + "0");
+            objective.getScore(ChatColor.DARK_RED + "").setScore(5);
 
             _currentArenas.add(newArena);
 
-            player.sendMessage(ChatColor.BOLD + "Arena created (" + dungeonName + ") with ID: " + ID);
+            player.sendMessage(ChatColor.GOLD + "Arena created for " + dungeonName + " with ID: " + arenaID);
         } else {
-            player.sendMessage(ChatColor.BOLD + "Dungeon not found, use /list-dungeons to get the list");
+            player.sendMessage(ChatColor.RED + "Dungeon not found, use /list-dungeons to get the list");
             return;
         }
 
@@ -669,6 +717,7 @@ public class Main extends JavaPlugin implements Listener {
         String prefix = "dungeons." + name + ".";
         // Gets config
         FileConfiguration config = this.getConfig();
+
         // Number of waves to be generated
         Integer waveCount = 5;
         config.set(prefix + "wave-count", waveCount);
@@ -823,62 +872,80 @@ public class Main extends JavaPlugin implements Listener {
         return x;
     }
 
+    // * Generates a new arena name that hasnt already been taken
+    private String generateArenaName(String dungeonName) {
+        FileConfiguration config = this.getConfig();
+        String name = dungeonName + "1";
+        Integer counter = 1;
+        while (config.contains("arenas." + name)) {
+            counter++;
+            name = dungeonName + counter;
+
+        }
+        return name;
+    }
+
     // *Loads arenas into global hash map to keep track of waves and avaialblity
     private void loadArenas() {
+        getLogger().info("Loading arenas from config...")
         // Clears all current arenas
-        // _currentArenas.clear();
+        _currentArenas.clear();
 
         FileConfiguration config = this.getConfig();
-        // Get all arenas
-        ConfigurationSection arenas = config.getConfigurationSection("arenas");
+        // Checks if the config contains "arenas", if not, none in config
+        if (config.contains("arenas")) {
 
-        Set<String> ids = arenas.getKeys(false);
+            // Get all arenas
+            ConfigurationSection arenas = config.getConfigurationSection("arenas");
 
-        // Gets scoreboard manager
-        ScoreboardManager manager = Bukkit.getScoreboardManager();
+            Set<String> ids = arenas.getKeys(false);
 
-        // Iterate through and add to current arenas with value = 0 (available)
-        for (String id : ids) {
-            Arena newArena = new Arena();
-            newArena.arenaID = id;
-            newArena.centerLocation = getLocation(id);
-            newArena.dungeonName = arenas.getString("." + id + ".dungeon-name");
-            newArena.currentWave = 0;
-            newArena.totalWaves = config.getInt("dungeons." + newArena.dungeonName + ".wave-count");
-            newArena.remainingEnemies = 0;
+            // Gets scoreboard manager
+            ScoreboardManager manager = Bukkit.getScoreboardManager();
 
-            // Sets up scoreboard for arena
-            newArena.scoreboard = manager.getNewScoreboard();
+            // Iterate through and add to current arenas with value = 0 (available)
+            for (String id : ids) {
+                Arena newArena = new Arena();
+                newArena.arenaID = id;
+                newArena.centerLocation = getLocation(id);
+                newArena.dungeonName = arenas.getString("." + id + ".dungeon-name");
+                newArena.currentWave = 0;
+                newArena.totalWaves = config.getInt("dungeons." + newArena.dungeonName + ".wave-count");
+                newArena.remainingEnemies = 0;
 
-            Objective objective = newArena.scoreboard.registerNewObjective(newArena.arenaID, "dummy",
-                    ChatColor.GOLD + "===== " + newArena.dungeonName + " =====");
-            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+                // Sets up scoreboard for arena
+                newArena.scoreboard = manager.getNewScoreboard();
 
-            Score waveText = objective.getScore(ChatColor.DARK_AQUA + "Wave:");
-            waveText.setScore(10);
+                Objective objective = newArena.scoreboard.registerNewObjective(newArena.arenaID, "dummy",
+                        ChatColor.GOLD + "===== " + newArena.dungeonName + " =====");
+                objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
-            Team waveCounter = newArena.scoreboard.registerNewTeam("waveCounter");
-            waveCounter.addEntry(ChatColor.DARK_AQUA + "");
-            waveCounter.setPrefix(ChatColor.GOLD + "0");
-            objective.getScore(ChatColor.DARK_AQUA + "").setScore(9);
+                Score waveText = objective.getScore(ChatColor.DARK_AQUA + "Wave:");
+                waveText.setScore(10);
 
-            Score remainingText = objective.getScore(ChatColor.DARK_AQUA + "Remaining: ");
-            remainingText.setScore(8);
+                Team waveCounter = newArena.scoreboard.registerNewTeam("waveCounter");
+                waveCounter.addEntry(ChatColor.DARK_AQUA + "");
+                waveCounter.setPrefix(ChatColor.GOLD + "0");
+                objective.getScore(ChatColor.DARK_AQUA + "").setScore(9);
 
-            Team remainingCounter = newArena.scoreboard.registerNewTeam("remainingCounter");
-            remainingCounter.addEntry(ChatColor.RED + "");
-            remainingCounter.setPrefix(ChatColor.GOLD + "0");
-            objective.getScore(ChatColor.RED + "").setScore(7);
+                Score remainingText = objective.getScore(ChatColor.DARK_AQUA + "Remaining: ");
+                remainingText.setScore(8);
 
-            Score difficultyText = objective.getScore(ChatColor.DARK_AQUA + "Dificulty: ");
-            difficultyText.setScore(6);
+                Team remainingCounter = newArena.scoreboard.registerNewTeam("remainingCounter");
+                remainingCounter.addEntry(ChatColor.RED + "");
+                remainingCounter.setPrefix(ChatColor.GOLD + "0");
+                objective.getScore(ChatColor.RED + "").setScore(7);
 
-            Team diffCounter = newArena.scoreboard.registerNewTeam("diffCounter");
-            diffCounter.addEntry(ChatColor.DARK_RED + "");
-            diffCounter.setPrefix(ChatColor.GOLD + "0");
-            objective.getScore(ChatColor.DARK_RED + "").setScore(5);
+                Score difficultyText = objective.getScore(ChatColor.DARK_AQUA + "Dificulty: ");
+                difficultyText.setScore(6);
 
-            _currentArenas.add(newArena);
+                Team diffCounter = newArena.scoreboard.registerNewTeam("diffCounter");
+                diffCounter.addEntry(ChatColor.DARK_RED + "");
+                diffCounter.setPrefix(ChatColor.GOLD + "0");
+                objective.getScore(ChatColor.DARK_RED + "").setScore(5);
+
+                _currentArenas.add(newArena);
+            }
         }
     }
 
