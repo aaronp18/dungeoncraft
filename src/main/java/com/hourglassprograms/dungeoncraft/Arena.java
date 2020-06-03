@@ -13,6 +13,7 @@ public class Arena {
     Integer currentWave = 0;
     Integer totalWaves;
     Integer remainingEnemies = 0;
+    Integer spawnRadius = 10;
     Boolean isWaiting = false;
     Double difficultyMultiplyer = 1.0;
     ArrayList<Player> players = null;

@@ -124,13 +124,24 @@ public class Main extends JavaPlugin implements Listener {
             if (cmd.getName().equalsIgnoreCase("create-dungeon")) {
                 if (player.hasPermission("dungeoncraft.dungeon.create")) { // Must have permission
                     // Makes sure correct amount of arguments
-                    if (args.length == 1) {
+                    if (args.length >= 1) {
                         // Checks if a dungeon already exists
                         if (getConfig().contains("dungeons." + args[0])) {
                             // Already exsits
                             player.sendMessage(ChatColor.RED + "This dungeon already exsits...");
+                        } else if (args.length == 2) {
+                            // Then contains wave count
+                            player.sendMessage(ChatColor.GOLD + "Creating dungeon " + args[0]);
+                            // Checks if wave count is number
+                            if (isInteger(args[1])) {
+                                // Creates Dungeon
+                                createDungeon(args[0], Integer.parseInt(args[1]));
+                            } else {
+                                createDungeon(args[0]);
+                            }
+
                         } else {
-                            player.sendMessage(ChatColor.BOLD + "Creating dungeon...");
+                            player.sendMessage(ChatColor.GOLD + "Creating dungeon " + args[0]);
                             // Creates Dungeon
                             createDungeon(args[0]);
 
@@ -153,9 +164,19 @@ public class Main extends JavaPlugin implements Listener {
                 if (player.hasPermission("dungeoncraft.arenas.create")) { // Must have permission
                     // Makes sure correct amount of arguments
                     if (args.length == 1) {
-                        player.sendMessage(ChatColor.BOLD + "Creating Arena From your postion...");
+
                         createArena(args[0], player);
                         // Creates new dungeon config
+                        return true;
+                    } else if (args.length >= 2) {
+                        // Checks if wave count is number
+                        if (isInteger(args[1])) {
+                            // Creates Dungeon
+                            createArena(args[0], player, Integer.parseInt(args[1]));
+                        } else {
+                            createArena(args[0], player);
+                        }
+
                         return true;
                     } else {
                         // Incorrect amount of args
@@ -210,34 +231,29 @@ public class Main extends JavaPlugin implements Listener {
             else if (cmd.getName().equalsIgnoreCase("arenas")) {
                 if (player.hasPermission("dungeoncraft.arenas.list")) { // Must have permission
                     // Makes sure correct amount of arguments
-                    if (args.length == 0) {
-                        updateRemaining();
-                        if (_currentArenas.size() == 0) {
-                            player.sendMessage(ChatColor.RED + "There are currently no created arenas...");
-                        } else {
-                            player.sendMessage(
-                                    ChatColor.BOLD + "===== Arenas (" + _currentArenas.size() + ")" + " =====");
-                            for (Arena arena : _currentArenas) {
-                                player.sendMessage(ChatColor.GOLD + "===== " + arena.arenaID + " =====");
-                                player.sendMessage(ChatColor.DARK_AQUA + "- Dungeon Name: " + arena.dungeonName);
-                                player.sendMessage(ChatColor.DARK_AQUA + "- Location: ");
-                                player.sendMessage(ChatColor.DARK_AQUA + "      World: "
-                                        + arena.centerLocation.getWorld().getName() + " X: "
-                                        + arena.centerLocation.getBlockX() + " Y: " + arena.centerLocation.getBlockY()
-                                        + " Z: " + arena.centerLocation.getBlockZ());
 
-                                player.sendMessage(ChatColor.DARK_AQUA + "- Current Wave: " + arena.currentWave);
-                                player.sendMessage(
-                                        ChatColor.DARK_AQUA + "- Remaining Enemies: " + arena.remainingEnemies);
-
-                            }
-                        }
-
-                        return true;
+                    updateRemaining();
+                    if (_currentArenas.size() == 0) {
+                        player.sendMessage(ChatColor.RED + "There are currently no created arenas...");
                     } else {
-                        // Incorrect amount of args
-                        return false;
+                        player.sendMessage(ChatColor.BOLD + "===== Arenas (" + _currentArenas.size() + ")" + " =====");
+                        for (Arena arena : _currentArenas) {
+                            player.sendMessage(ChatColor.GOLD + "===== " + arena.arenaID + " =====");
+                            player.sendMessage(ChatColor.DARK_AQUA + "- Dungeon Name: " + arena.dungeonName);
+                            player.sendMessage(ChatColor.DARK_AQUA + "- Location: ");
+                            player.sendMessage(ChatColor.DARK_AQUA + "      World: "
+                                    + arena.centerLocation.getWorld().getName() + " X: "
+                                    + arena.centerLocation.getBlockX() + " Y: " + arena.centerLocation.getBlockY()
+                                    + " Z: " + arena.centerLocation.getBlockZ());
+
+                            player.sendMessage(ChatColor.DARK_AQUA + "- Current Wave: " + arena.currentWave);
+                            player.sendMessage(ChatColor.DARK_AQUA + "- Remaining Enemies: " + arena.remainingEnemies);
+                            player.sendMessage(ChatColor.DARK_AQUA + "- Spawn Radius: " + arena.spawnRadius);
+
+                        }
                     }
+
+                    return true;
 
                 } else {
                     player.sendMessage(ChatColor.BOLD + "You do not have the perms to do this");
@@ -529,7 +545,7 @@ public class Main extends JavaPlugin implements Listener {
                 Integer amount = (int) (config.getInt(prefix + "." + mob + ".amount") * arena.difficultyMultiplyer);
 
                 for (int i = 0; i < amount; i++) {
-                    Double spawnRadius = 10.0;
+                    Double spawnRadius = new Double(arena.spawnRadius);
                     // Random += location
                     Double vX = getRandomDouble(-spawnRadius, spawnRadius);
                     Double vZ = getRandomDouble(-spawnRadius, spawnRadius);
@@ -631,15 +647,16 @@ public class Main extends JavaPlugin implements Listener {
             return 1.0;
         } else if (difficulty.equalsIgnoreCase("hard")) {
             return 2.0;
-        } else if (isNumeric(difficulty)) {
-            return Double.parseDouble(difficulty);
-
         }
         return 1.0;
     }
 
-    // *Creates arena based on location
     private void createArena(String dungeonName, Player player) {
+        createArena(dungeonName, player, 10);
+    }
+
+    // *Creates arena based on location
+    private void createArena(String dungeonName, Player player, Integer radius) {
 
         FileConfiguration config = this.getConfig();
 
@@ -648,6 +665,7 @@ public class Main extends JavaPlugin implements Listener {
             String arenaID = generateArenaName(dungeonName);
             String prefix = "arenas." + arenaID + "."; // Make multiple arenas per dungeon
             config.set(prefix + "dungeon-name", dungeonName);
+            config.set(prefix + "radius", radius);
             // Gets location
             Location locale = player.getLocation();
 
@@ -668,6 +686,7 @@ public class Main extends JavaPlugin implements Listener {
             newArena.currentWave = 0;
             newArena.totalWaves = config.getInt("dungeons." + newArena.dungeonName + ".wave-count");
             newArena.remainingEnemies = 0;
+            newArena.spawnRadius = radius;
 
             // Sets up scoreboard for arena
             ScoreboardManager manager = Bukkit.getScoreboardManager();
@@ -713,13 +732,17 @@ public class Main extends JavaPlugin implements Listener {
 
     // *Creates dungeon and config
     private void createDungeon(String name) {
+        createDungeon(name, 5);
+    }
+
+    private void createDungeon(String name, Integer waveCount) {
         // Sets the prefix for all of the dungeon settings
         String prefix = "dungeons." + name + ".";
         // Gets config
         FileConfiguration config = this.getConfig();
 
         // Number of waves to be generated
-        Integer waveCount = 5;
+        ;
         config.set(prefix + "wave-count", waveCount);
         config.set(prefix + "dungeon-id", UUID.randomUUID().toString());
 
@@ -735,12 +758,25 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     // *Checks if string is a number
-    public boolean isNumeric(String strNum) {
+    public boolean isDouble(String strNum) {
         if (strNum == null) {
             return false;
         }
         try {
             double d = Double.parseDouble(strNum);
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+        return true;
+    }
+
+    // *Checks if string is a integer
+    public boolean isInteger(String strNum) {
+        if (strNum == null) {
+            return false;
+        }
+        try {
+            Integer d = Integer.parseInt(strNum);
         } catch (NumberFormatException nfe) {
             return false;
         }
@@ -799,7 +835,6 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     // *Returns the index of the party the player has been invited to
-
     private Integer getInvitedIndex(Player player) {
         if (!_parties.isEmpty()) {
             // Iterates through parties
@@ -875,11 +910,11 @@ public class Main extends JavaPlugin implements Listener {
     // * Generates a new arena name that hasnt already been taken
     private String generateArenaName(String dungeonName) {
         FileConfiguration config = this.getConfig();
-        String name = dungeonName + "1";
+        String name = dungeonName + "-1";
         Integer counter = 1;
         while (config.contains("arenas." + name)) {
             counter++;
-            name = dungeonName + counter;
+            name = dungeonName + "-" + counter;
 
         }
         return name;
@@ -887,7 +922,7 @@ public class Main extends JavaPlugin implements Listener {
 
     // *Loads arenas into global hash map to keep track of waves and avaialblity
     private void loadArenas() {
-        getLogger().info("Loading arenas from config...")
+        getLogger().info("Loading arenas from config...");
         // Clears all current arenas
         _currentArenas.clear();
 
@@ -912,6 +947,7 @@ public class Main extends JavaPlugin implements Listener {
                 newArena.currentWave = 0;
                 newArena.totalWaves = config.getInt("dungeons." + newArena.dungeonName + ".wave-count");
                 newArena.remainingEnemies = 0;
+                newArena.spawnRadius = arenas.getInt(id + ".radius");
 
                 // Sets up scoreboard for arena
                 newArena.scoreboard = manager.getNewScoreboard();
@@ -999,6 +1035,7 @@ public class Main extends JavaPlugin implements Listener {
                         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "Congratulations! You have completed "
                                 + arena.dungeonName + "!!!");
                         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "Here is your prize, well done");
+                        player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
                     }
 
                 }
