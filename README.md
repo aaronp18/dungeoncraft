@@ -40,7 +40,7 @@ This means that you can design 1 **Dungeon** with a set of custom waves which ca
  - `/create-dungeon <dungeon name> [wave count]` - Used to generate a new Dungeon in `config.yml`. The wave count is how many waves are generated. Permission required:  `(dungeoncraft.dungeon.create)`
  - `/create-arena <dungeon name> [spawn radius]` - Used to create a new arena from the players current position. This location will then be linked to the Dungeon inputted. The spawn radius (default: 10) changes the radius at which mobs spawn. Permission required: `(dungeoncraft.arenas.create)`
  - `/arenas` - Simply lists all the arenas that have been made along with their location and current status. Permission required:  `(dungeoncraft.arenas.list)`
- - `/start-dungeon <dungeon name> <difficulty (easy / hard)>` - Starts a dungeon with the current members in the party. Permission required:  `(dungeoncraft.start)`
+ - `/start-dungeon <dungeon name> <difficulty (easy / hard)>` - Starts a dungeon with the current members in the party if you are the party leader. Permission required:  `(dungeoncraft.start)`
  - `/dc-reload` - Used to reload the config into the game. This will reset any game in progress so be careful! Permission required:  `(dungeoncraft.reload)`
  
  #### Parties: 
@@ -51,5 +51,10 @@ This means that you can design 1 **Dungeon** with a set of custom waves which ca
  - `/party leave` - Leaves the current party
  - `/party list` - Lists current members in the party
  
+ 
+ ## Suggestions and Bug reports
+Any suggestions to improve this plugin are greatly appreciated. 
+
+If you discover any bugs (whoops!) then please leave a issue report to help me fix it. Thank you.
  
  
