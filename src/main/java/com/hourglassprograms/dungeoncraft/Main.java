@@ -130,22 +130,27 @@ public class Main extends JavaPlugin implements Listener {
             else if (cmd.getName().equalsIgnoreCase("start-dungeon")) {
                 if (player.hasPermission("dungeoncraft.start")) { // Must have permission
                     // Makes sure correct amount of arguments
-                    if (args.length >= 2) {
-                        player.sendMessage(ChatColor.BOLD + "Starting dungeon...");
-
-                        ArrayList<Player> players = new ArrayList<Player>();
-                        players.add(player);
-                        try {
-
-                            for (Integer i = 2; i < args.length; i++) {
-
-                                players.add(Bukkit.getPlayer(args[i]));
+                    if (args.length == 2) {
+                        // Checks if is in party
+                        if (isInParty(player)) {
+                            Integer index = getPartyIndex(player);
+                            // Checks if is leader
+                            if (isPartyLeader(player, index)) {
+                                // Is leader
+                                startDungeon(args[0], args[1], _parties.get(index).members);
+                            } else {
+                                player.sendMessage(ChatColor.RED + "Only the party leader can start dungeons...");
                             }
-                        } catch (Exception e) {
-                            player.sendMessage("An error occured getting other players... Make sure they are online!");
+                        } else {
+                            // Is just him
+                            // So makes his own players
+                            ArrayList<Player> players = new ArrayList<Player>();
+                            players.add(player);
+                            startDungeon(args[0], args[1], players);
                         }
 
-                        startDungeon(args[0], args[1], players);
+                        player.sendMessage(ChatColor.BOLD + "Starting dungeon...");
+
                         // Creates new dungeon config
                         return true;
                     } else {
@@ -735,6 +740,20 @@ public class Main extends JavaPlugin implements Listener {
             }
         }
         return null;
+    }
+
+    // * Checks if the players is the party leader
+    private boolean isPartyLeader(Player player, Integer index) {
+        if (!_parties.isEmpty()) {
+            // Iterates through parties
+            for (Party party : _parties) {
+                // Checks if the leader is the same as the player
+                if (party.leader.getName().equals(player.getName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // *Gets random double
