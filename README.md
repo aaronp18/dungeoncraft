@@ -1,6 +1,4 @@
-<hr>
 # DungeonCraft
-<hr>
 ## What is it?
 Well in short, this plugin allows you to easily add "dungeons" where you can fight waves of mobs on your own or with friends.
  
@@ -13,8 +11,6 @@ Features include:
  - Loot rewards can be changed to either spread amongst all the players or to give all of them the same reward.
  - Loot rewards that scale with the difficulty.
  - The ability to run commands when the dungeons are completed, enabling you to give custom items or trigger other plugins.
- <hr>
-
  
  Firstly, you may be asking whats the difference between a **Dungeon** and an **Arena**. Well simply put, **Dungeons** are the set of waves that spawn a set of mobs, whereas an **Arena** is just the place where this can take place. </p>
 
