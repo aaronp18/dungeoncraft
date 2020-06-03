@@ -31,7 +31,10 @@ import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
 public class Main extends JavaPlugin implements Listener {
-    ArrayList<Arena> currentArenas = new ArrayList<Arena>();
+    // Array of all the arenas loaded into memory from the config
+    ArrayList<Arena> _currentArenas = new ArrayList<Arena>();
+    // Array of all parties
+    ArrayList<Party> _parties = new ArrayList<Party>();
 
     @Override
     public void onEnable() {
@@ -61,7 +64,7 @@ public class Main extends JavaPlugin implements Listener {
         Entity entity = event.getEntity();
         Set<String> tags = entity.getScoreboardTags();
 
-        for (Arena arena : currentArenas) {
+        for (Arena arena : _currentArenas) {
             if (tags.contains(arena.arenaID)) {
                 // Then means was from this arena
                 // ToDo not upadting on kill
@@ -81,12 +84,8 @@ public class Main extends JavaPlugin implements Listener {
 
             Player player = (Player) sender;
 
-            if (cmd.getName().equalsIgnoreCase("help")) {
-                // Display help for dungeoncraft
-                player.sendMessage(ChatColor.BOLD + "Unknown command. Try /dc help");
-                return true;
-            } // *Create command - requires name for new dungeon
-            else if (cmd.getName().equalsIgnoreCase("create-dungeon")) {
+            // *Create command - requires name for new dungeon
+            if (cmd.getName().equalsIgnoreCase("create-dungeon")) {
                 if (player.hasPermission("dungeoncraft.dungeon.create")) { // Must have permission
                     // Makes sure correct amount of arguments
                     if (args.length == 1) {
@@ -167,8 +166,8 @@ public class Main extends JavaPlugin implements Listener {
                     // Makes sure correct amount of arguments
                     if (args.length == 0) {
                         updateRemaining();
-                        player.sendMessage(ChatColor.BOLD + "===== Arenas (" + currentArenas.size() + ")" + "=====");
-                        for (Arena arena : currentArenas) {
+                        player.sendMessage(ChatColor.BOLD + "===== Arenas (" + _currentArenas.size() + ")" + "=====");
+                        for (Arena arena : _currentArenas) {
                             player.sendMessage(ChatColor.GOLD + "===== " + arena.arenaID + "=====");
                             player.sendMessage(ChatColor.DARK_AQUA + "- Dungeon Name: " + arena.dungeonName);
                             player.sendMessage(ChatColor.DARK_AQUA + "- Location: ");
@@ -209,9 +208,188 @@ public class Main extends JavaPlugin implements Listener {
                     return true;
                 }
 
-            }
+            } else if (cmd.getName().equalsIgnoreCase("create-arena")) {
+                if (player.hasPermission("dungeoncraft.arenas.create")) { // Must have permission
+                    // Makes sure correct amount of arguments
+                    if (args.length == 1) {
+                        player.sendMessage(ChatColor.BOLD + "Creating Arena From your postion...");
+                        createArena(args[0], player);
+                        // Creates new dungeon config
+                        return true;
+                    } else {
+                        // Incorrect amount of args
+                        return false;
+                    }
+                    // Creates Dungeon
 
-        } else {
+                } else {
+                    player.sendMessage(ChatColor.BOLD + "You do not have the perms to do this");
+                    return true;
+                }
+
+            }
+            // * Party commands
+            // - /party create - creates a party x
+            // - /party invite @name - adds player to invited list x
+            // - /party accept - moves from invited to joined x
+            // - /party leave - removes from joined
+            // - /party list - lists members in current party
+            else if (cmd.getName().equalsIgnoreCase("party")) {
+                if (player.hasPermission("dungeoncraft.party")) { // Must have permission
+                    // Makes sure correct amount of arguments
+                    if (args.length == 1) {
+                        // Creates party
+                        if (args[0].equals("create")) {
+                            // Checks if player is in a party
+                            if (isInParty(player)) {
+                                // Already in party
+                                player.sendMessage(ChatColor.RED + "You are already in a party...");
+                            } else {
+                                Party newParty = new Party();
+                                newParty.leader = player;
+                                newParty.members.add(player);
+
+                                _parties.add(newParty);
+                                player.sendMessage(ChatColor.GOLD + "You have successfully create a party.");
+                            }
+                            return true;
+
+                        } else if (args[0].equals("accept") || args[0].equals("join")) {
+                            // Checks if player is in a party
+                            if (isInParty(player)) {
+                                // Already in party
+                                player.sendMessage(ChatColor.RED + "You are already in a party...");
+
+                            } else {
+                                // Check if player has been invited
+                                Integer inviteIndex = getInvitedIndex(player);
+                                if (inviteIndex != null) {
+                                    // Been invited
+                                    Party party = _parties.get(inviteIndex);
+                                    party.invited.remove(player);
+                                    party.members.add(player);
+
+                                    player.sendMessage(ChatColor.GOLD + "You have successfully joined the party");
+                                    party.leader.sendMessage(
+                                            ChatColor.GOLD + player.getName() + " has succesfully joined the party");
+                                    player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                                    party.leader.playSound(party.leader.getLocation(), Sound.ENTITY_PLAYER_LEVELUP,
+                                            1.0f, 1.0f);
+
+                                } else {
+                                    player.sendMessage(ChatColor.RED + "There are no outstanding invites");
+                                }
+
+                            }
+                            return true;
+
+                        } else if (args[0].equals("leave") || args[0].equals("exit")) {
+                            // Checks if player is in a party
+                            if (!isInParty(player)) {
+                                // Not in a party
+                                player.sendMessage(ChatColor.RED + "You are not in a party");
+
+                            } else {
+                                Integer index = getPartyIndex(player);
+                                Party party = _parties.get(index);
+                                party.members.remove(player);
+
+                                player.sendMessage(ChatColor.GOLD + "You have left the party");
+                                party.leader.sendMessage(ChatColor.GOLD + player.getName() + " has left the party");
+
+                            }
+                            return true;
+
+                        }
+                        // * Lists all of the invited and current memebers
+                        else if (args[0].equals("list")) {
+                            if (!_parties.isEmpty()) {
+                                player.sendMessage(
+                                        ChatColor.BOLD + "===== Parties (" + _parties.size() + ")" + "=====");
+                                for (Party party : _parties) {
+                                    String members = "";
+                                    String invited = "";
+                                    for (Player p : party.members) {
+                                        members += p.getDisplayName() + " ";
+                                    }
+                                    for (Player p : party.invited) {
+                                        invited += p.getDisplayName() + " ";
+                                    }
+
+                                    player.sendMessage(ChatColor.GOLD + "===== " + party.leader.getName() + " =====");
+                                    player.sendMessage(ChatColor.DARK_AQUA + " == Members == ");
+                                    player.sendMessage(ChatColor.DARK_AQUA + members);
+                                    player.sendMessage(ChatColor.DARK_AQUA + " == Invited == ");
+                                    player.sendMessage(ChatColor.DARK_AQUA + invited);
+
+                                }
+                            } else {
+                                // Then parties is empty
+                                player.sendMessage(ChatColor.RED + "There are no current parties...");
+                            }
+                            return true;
+                        } else {
+                            return false;
+                        }
+
+                    } else if (args.length == 2) {
+                        if (args[0].equals("invite")) {
+                            // If the player is not in a party, then means that they cannot invite anyone to
+                            // one
+                            if (!isInParty(player)) {
+                                player.sendMessage(
+                                        ChatColor.RED + "You are not in a party. Do /party create to start one");
+                            } else {
+                                // Checks if player is online
+                                Player invitedPlayer = Bukkit.getPlayer(args[1]);
+                                if (invitedPlayer == null) {
+                                    // Means the player could not be found
+                                    player.sendMessage(
+                                            ChatColor.RED + "Player \"" + args[1] + "\" could not be found.");
+                                } else {
+                                    Integer index = getPartyIndex(player);
+                                    // Checks if invited player is already in the invite list
+                                    if (isInInviteList(index, invitedPlayer)) {
+                                        player.sendMessage(
+                                                ChatColor.RED + "Player \"" + args[1] + "\" already invited");
+                                    }
+                                    // Checks if they are already in the party
+                                    else if (isInParty(invitedPlayer)) {
+                                        player.sendMessage(
+                                                ChatColor.RED + "Player \"" + args[1] + "\" already in the party");
+                                    }
+                                    // Means that the player isnt in the party or invited yet
+                                    else {
+                                        // Adds invited player to the invited party
+                                        _parties.get(index).invited.add(invitedPlayer);
+                                        // Sends notifying message and sound
+                                        player.sendMessage(ChatColor.GOLD + "Player \"" + args[1]
+                                                + "\" has been invited to the party");
+                                        invitedPlayer.sendMessage(ChatColor.GOLD + player.getName()
+                                                + " has invited you to join their DungeonCraft party. Do \"/party accept\" to join");
+                                        invitedPlayer.playSound(invitedPlayer.getLocation(),
+                                                Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                                    }
+
+                                }
+
+                            }
+                            return true;
+                        }
+                    } else {
+                        // Incorrect amount of args
+                        return false;
+                    }
+
+                } else {
+                    player.sendMessage(ChatColor.BOLD + "You do not have the perms to do this");
+                    return true;
+                }
+
+            }
+        } else
+
+        {
             getLogger().info("You must send via a player");
         }
 
@@ -237,7 +415,7 @@ public class Main extends JavaPlugin implements Listener {
             }
 
             // Updates the current arena with player
-            for (Arena a : currentArenas) {
+            for (Arena a : _currentArenas) {
                 if (a.arenaID == arena.arenaID) {
                     // Then is current
                     a.players = players;
@@ -283,7 +461,7 @@ public class Main extends JavaPlugin implements Listener {
         String prefix = "dungeons." + arena.dungeonName + ".waves.wave" + Integer.toString(arena.currentWave);
 
         // Gets arena
-        for (Arena a : currentArenas) {
+        for (Arena a : _currentArenas) {
             if (arena.arenaID.equals(arenaID)) {
                 a.isWaiting = false;
 
@@ -368,7 +546,7 @@ public class Main extends JavaPlugin implements Listener {
 
     // Returns updated Arena
     private Arena getArena(String arenaID) {
-        for (Arena a : currentArenas) {
+        for (Arena a : _currentArenas) {
             if (arenaID == a.arenaID) {
                 return a;
             }
@@ -389,7 +567,7 @@ public class Main extends JavaPlugin implements Listener {
 
     // * Finds any availabe arena for dungeon
     private Arena findAvailableArena(String dungeonName) {
-        for (Arena arena : currentArenas) {
+        for (Arena arena : _currentArenas) {
             if (dungeonName.equals(arena.dungeonName)) {
                 // Then is for that dungeon
                 if (arena.currentWave == 0) {
@@ -445,7 +623,7 @@ public class Main extends JavaPlugin implements Listener {
             newArena.dungeonName = dungeonName;
             newArena.currentWave = 0;
 
-            currentArenas.add(newArena);
+            _currentArenas.add(newArena);
 
             player.sendMessage(ChatColor.BOLD + "Arena created (" + dungeonName + ") with ID: " + ID);
         } else {
@@ -489,6 +667,76 @@ public class Main extends JavaPlugin implements Listener {
         return true;
     }
 
+    // * Checks if the player is already in a party
+    public boolean isInParty(Player player) {
+        if (!_parties.isEmpty()) {
+            // Iterates through parties
+            for (Party party : _parties) {
+                // Iterates through members
+                for (Player p : party.members) {
+                    // If one of the members has the same name as the player, then must mean they
+                    // are already in a party
+                    if (p.getName().equals(player.getName())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    // * Returns the current players party index
+    public Integer getPartyIndex(Player player) {
+        if (!_parties.isEmpty()) {
+            // Iterates through parties
+            for (Party party : _parties) {
+                // Iterates through members
+                for (Player p : party.members) {
+                    // If one of the members has the same name as the player, then must mean they
+                    // are already in a party
+                    if (p.getName().equals(player.getName())) {
+                        return _parties.indexOf(party);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // * Checks if player is in the invitelist already
+    private boolean isInInviteList(Integer index, Player player) {
+        if (!_parties.isEmpty()) {
+            Party party = _parties.get(index);
+            for (Player p : party.invited) {
+                if (p.getName().equals(player.getName())) {
+                    // Then is in invite list
+                    return true;
+                }
+            }
+            // Otherwise is not in list
+        }
+        return false;
+    }
+
+    // *Returns the index of the party the player has been invited to
+
+    private Integer getInvitedIndex(Player player) {
+        if (!_parties.isEmpty()) {
+            // Iterates through parties
+            for (Party party : _parties) {
+                // Iterates through members
+                for (Player p : party.invited) {
+                    // If one of the members has the same name as the player, then must mean they
+                    // are already in a party
+                    if (p.getName().equals(player.getName())) {
+                        return _parties.indexOf(party);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     // *Gets random double
     public static double getRandomDouble(double min, double max) {
         double x = (Math.random() * ((max - min) + 1)) + min;
@@ -498,7 +746,7 @@ public class Main extends JavaPlugin implements Listener {
     // *Loads arenas into global hash map to keep track of waves and avaialblity
     private void loadArenas() {
         // Clears all current arenas
-        // currentArenas.clear();
+        // _currentArenas.clear();
 
         FileConfiguration config = this.getConfig();
         // Get all arenas
@@ -550,7 +798,7 @@ public class Main extends JavaPlugin implements Listener {
             diffCounter.setPrefix(ChatColor.GOLD + "0");
             objective.getScore(ChatColor.DARK_RED + "").setScore(5);
 
-            currentArenas.add(newArena);
+            _currentArenas.add(newArena);
         }
     }
 
@@ -559,7 +807,7 @@ public class Main extends JavaPlugin implements Listener {
         // Get all entities
 
         // Then counts
-        for (Arena arena : currentArenas) {
+        for (Arena arena : _currentArenas) {
             // Reset remaining
             arena.remainingEnemies = 0;
             // Iterates through every entity
@@ -616,7 +864,7 @@ public class Main extends JavaPlugin implements Listener {
     private void killAllUnused() {
         // Gets all mobs
 
-        for (Arena arena : currentArenas) {
+        for (Arena arena : _currentArenas) {
             // Means if there are players
 
             if (arena.players != null) {
@@ -629,8 +877,6 @@ public class Main extends JavaPlugin implements Listener {
                             // Then means was from this arena
                             en.remove();
 
-                            // Then can add to count
-
                         }
                     }
             }
@@ -642,8 +888,6 @@ public class Main extends JavaPlugin implements Listener {
                     if (en.getScoreboardTags().contains(arena.arenaID)) {
                         // Then means was from this arena
                         en.remove();
-
-                        // Then can add to count
 
                     }
                 }

@@ -1,6 +1,6 @@
 main: com.hourglassprograms.dungeoncraft.Main
 name: DungeonCraft
-version: 0.0.11
+version: 0.0.12
 author: Hourglass Programs
 api-version: 1.15
 commands:
@@ -29,3 +29,8 @@ commands:
     permission: dungeoncraft.reload
     permission-message: You do not have permission to use this command.
     usage: "Usage: /<command>"
+  party:
+    description: "Command to manipulate the parties"
+    permission: dungeoncraft.party
+    permission-message: You do not have permission to use this command.
+    usage: "Usage: /<command> [list:create:invite <name>:accept:leave]"
