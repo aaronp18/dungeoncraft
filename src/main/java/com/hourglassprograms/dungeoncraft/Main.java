@@ -1,7 +1,6 @@
 package com.hourglassprograms.dungeoncraft;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Set;
 import java.util.UUID;
 
@@ -16,7 +15,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -28,10 +26,8 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
-import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.scoreboard.Team;
-import org.bukkit.util.Vector;
 
 public class Main extends JavaPlugin implements Listener {
     // Array of all the arenas loaded into memory from the config
@@ -84,8 +80,6 @@ public class Main extends JavaPlugin implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         // Called when a player leaves a server
         Player player = event.getPlayer();
-        String quitMessage = event.getQuitMessage();
-
         // Removes iteself from an arena member list
         for (Arena arena : _currentArenas) {
             boolean toRemove = false;
@@ -269,10 +263,8 @@ public class Main extends JavaPlugin implements Listener {
 
                     player.sendMessage(ChatColor.BOLD + "Reloading the DungeonCraft config...");
                     this.reloadConfig();
-                    // Creates new dungeon config
+                    loadArenas();
                     return true;
-
-                    // Creates Dungeon
 
                 } else {
                     player.sendMessage(ChatColor.BOLD + "You do not have the perms to do this");
@@ -1047,6 +1039,9 @@ public class Main extends JavaPlugin implements Listener {
                         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
                         giveLoot(arena);
                     }
+
+                    // Make wave available
+                    arena.currentWave = 0;
 
                 }
             }
