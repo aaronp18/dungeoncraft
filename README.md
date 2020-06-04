@@ -19,7 +19,8 @@ This means that you can design 1 **Dungeon** with a set of custom waves which ca
  ## Setup
  Setting up Dungeon Craft is really quite simple.
  #### General Startup
- - Download the plugin into your `pluigin` folder on your Bukkit server.
+ - Download the `.jar` file into your `pluigin` folder on your Bukkit server.
+ - Download and Unzip the `.zip` folder and copy this into the `world/datapacks` folder. This is so that the mobs that spawn don't drop any loot to clutter your inventory.
  - Start up your server
  - Then go into your server and run `/create-dungeon <dungeon name>` to create a new dungeon.
  - Then build a little area for your arena and do `/create-arena <dungeon name> <spawn radius>` with the same name as the last command. 
