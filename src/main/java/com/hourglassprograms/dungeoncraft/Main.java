@@ -511,94 +511,97 @@ public class Main extends JavaPlugin implements Listener {
     // * Spawns wave
     protected void spawnWave(String arenaID) {
         Arena arena = getArena(arenaID);
+        // Checks that arena is still being used
+        if (arena.currentWave > 0) {
 
-        for (Player player : arena.players) {
-            player.sendMessage(ChatColor.BOLD + "Starting wave: " + Integer.toString(arena.currentWave));
-        }
-        String prefix = "dungeons." + arena.dungeonName + ".waves.wave" + Integer.toString(arena.currentWave);
-
-        // Gets arena
-        for (Arena a : _currentArenas) {
-            if (arena.arenaID.equals(arenaID)) {
-                a.isWaiting = false;
-
-            }
-        }
-        // Iterates through each mob
-        FileConfiguration config = this.getConfig();
-        // Get all mobs in wave
-        ConfigurationSection wave = config.getConfigurationSection(prefix);
-
-        Set<String> mobs = wave.getKeys(false);
-
-        try {
-            // Play lightning sound
             for (Player player : arena.players) {
-                player.playSound(arena.centerLocation, Sound.ENTITY_WITHER_SPAWN, 1.0f, 1.0f);
+                player.sendMessage(ChatColor.BOLD + "Starting wave: " + Integer.toString(arena.currentWave));
             }
+            String prefix = "dungeons." + arena.dungeonName + ".waves.wave" + Integer.toString(arena.currentWave);
 
-            // Iterate through and comapare dungeon name
-            for (String mob : mobs) {
-                Integer amount = (int) (config.getInt(prefix + "." + mob + ".amount") * arena.difficultyMultiplyer);
+            // Gets arena
+            for (Arena a : _currentArenas) {
+                if (arena.arenaID.equals(arenaID)) {
+                    a.isWaiting = false;
 
-                for (int i = 0; i < amount; i++) {
-                    Double spawnRadius = new Double(arena.spawnRadius);
-                    // Random += location
-                    Double vX = getRandomDouble(-spawnRadius, spawnRadius);
-                    Double vZ = getRandomDouble(-spawnRadius, spawnRadius);
+                }
+            }
+            // Iterates through each mob
+            FileConfiguration config = this.getConfig();
+            // Get all mobs in wave
+            ConfigurationSection wave = config.getConfigurationSection(prefix);
 
-                    Double spawnX = arena.centerLocation.getX() + vX;
-                    Double spawnZ = arena.centerLocation.getZ() + vZ;
-                    Double spawnY = arena.centerLocation.getY() + 3.0;
+            Set<String> mobs = wave.getKeys(false);
 
-                    String nbtString = "";
-                    // Modifiers
-                    // If contains an nbt tag
-                    if (config.contains(prefix + "." + mob + ".nbt")) {
-                        // Get nbt from config
-                        nbtString = config.getString(prefix + "." + mob + ".nbt");
-                        // Checking if not empty
-
-                        if (!nbtString.equals("{}")) {
-                            // Remove end bracket
-                            nbtString = StringUtils.chop(nbtString);
-                            // Add on ,data}
-                            // Adds death loot table, adds teamId for detection, adds slowfalling effect for
-                            // 3 secs
-                            nbtString += ",DeathLootTable:\"dungeoncraft:entities/nodrops\",ActiveEffects:[{Id:28,Amplifier:0,Duration:60f}],PersistenceRequired:1,Tags:[\""
-                                    + arenaID + "\"]}";
-
-                        } else {
-                            // Not correct format
-                            // Replace with {data}
-                            nbtString = "{DeathLootTable:\"dungeoncraft:entities/nodrops\",ActiveEffects:[{Id:28,Amplifier:0,Duration:60f}],PersistenceRequired:1,Tags:[\""
-                                    + arenaID + "\"]}";
-                        }
-                    }
-
-                    String command = "execute at " + arena.players.get(0).getName() + " run summon minecraft:" + mob
-                            + " " + spawnX + " " + spawnY + " " + spawnZ + " " + nbtString;
-
-                    // Spawns each mob
-                    Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
-                    updateRemaining();
+            try {
+                // Play lightning sound
+                for (Player player : arena.players) {
+                    player.playSound(arena.centerLocation, Sound.ENTITY_WITHER_SPAWN, 1.0f, 1.0f);
                 }
 
-            }
-        } catch (
+                // Iterate through and comapare dungeon name
+                for (String mob : mobs) {
+                    Integer amount = (int) (config.getInt(prefix + "." + mob + ".amount") * arena.difficultyMultiplyer);
 
-        Exception e) {
-            // TO DO: handle exception
-            for (Player player : arena.players) {
-                player.sendMessage("An error has occured... Perhaps the config is broken?");
-            }
+                    for (int i = 0; i < amount; i++) {
+                        Double spawnRadius = new Double(arena.spawnRadius);
+                        // Random += location
+                        Double vX = getRandomDouble(-spawnRadius, spawnRadius);
+                        Double vZ = getRandomDouble(-spawnRadius, spawnRadius);
 
-            getLogger().info("An error has occured spawning wave: " + e.getMessage());
+                        Double spawnX = arena.centerLocation.getX() + vX;
+                        Double spawnZ = arena.centerLocation.getZ() + vZ;
+                        Double spawnY = arena.centerLocation.getY() + 3.0;
+
+                        String nbtString = "";
+                        // Modifiers
+                        // If contains an nbt tag
+                        if (config.contains(prefix + "." + mob + ".nbt")) {
+                            // Get nbt from config
+                            nbtString = config.getString(prefix + "." + mob + ".nbt");
+                            // Checking if not empty
+
+                            if (!nbtString.equals("{}")) {
+                                // Remove end bracket
+                                nbtString = StringUtils.chop(nbtString);
+                                // Add on ,data}
+                                // Adds death loot table, adds teamId for detection, adds slowfalling effect for
+                                // 3 secs
+                                nbtString += ",DeathLootTable:\"dungeoncraft:entities/nodrops\",ActiveEffects:[{Id:28,Amplifier:0,Duration:60f}],PersistenceRequired:1,Tags:[\""
+                                        + arenaID + "\"]}";
+
+                            } else {
+                                // Not correct format
+                                // Replace with {data}
+                                nbtString = "{DeathLootTable:\"dungeoncraft:entities/nodrops\",ActiveEffects:[{Id:28,Amplifier:0,Duration:60f}],PersistenceRequired:1,Tags:[\""
+                                        + arenaID + "\"]}";
+                            }
+                        }
+
+                        String command = "execute at " + arena.players.get(0).getName() + " run summon minecraft:" + mob
+                                + " " + spawnX + " " + spawnY + " " + spawnZ + " " + nbtString;
+
+                        // Spawns each mob
+                        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
+                        updateRemaining();
+                    }
+
+                }
+            } catch (
+
+            Exception e) {
+                // TO DO: handle exception
+                for (Player player : arena.players) {
+                    player.sendMessage("An error has occured... Perhaps the config is broken?");
+                }
+
+                getLogger().info("An error has occured spawning wave: " + e.getMessage());
+            }
+            // +- random amount
+
+            // Spawns each mob
+
         }
-        // +- random amount
-
-        // Spawns each mob
-
     }
 
     // Returns updated Arena
