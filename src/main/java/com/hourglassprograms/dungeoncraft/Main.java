@@ -264,6 +264,7 @@ public class Main extends JavaPlugin implements Listener {
                     player.sendMessage(ChatColor.BOLD + "Reloading the DungeonCraft config...");
                     this.reloadConfig();
                     loadArenas();
+                    killAllUnused();
                     return true;
 
                 } else {
