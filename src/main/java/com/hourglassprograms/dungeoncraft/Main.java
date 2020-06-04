@@ -1044,8 +1044,9 @@ public class Main extends JavaPlugin implements Listener {
                                 + arena.dungeonName + "!!!");
                         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "Here is your prize, well done");
                         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
-                        giveLoot(arena);
+
                     }
+                    giveLoot(arena);
 
                     // Make wave available
                     arena.currentWave = 0;
