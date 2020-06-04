@@ -17,10 +17,10 @@ Features include:
 This means that you can design 1 **Dungeon** with a set of custom waves which can be played simultaneously in many different **arenas** for many differnt players. These **Arenas** auto provision themselves which means you won't have two games going on in the same **Arena**. Cool right? 
 
  ## Setup
- Setting up Dungeon Craft is really quite simple.
+ Setting up Dungeon Craft is really quite simple. [Download](https://github.com/aaronp18/dungeoncraft/releases)
  #### General Startup
- - Download the `.jar` file into your `pluigin` folder on your Bukkit server.
- - Download and Unzip the `.zip` folder and copy this into the `world/datapacks` folder. This is so that the mobs that spawn don't drop any loot to clutter your inventory.
+ - Download the `.jar` file from [releases](https://github.com/aaronp18/dungeoncraft/releases) into your `pluigin` folder on your Bukkit server.
+ - Download and Unzip the `.zip` folder from [releases](https://github.com/aaronp18/dungeoncraft/releases) and copy this into the `world/datapacks` folder. This is so that the mobs that spawn don't drop any loot to clutter your inventory.
  - Start up your server
  - Then go into your server and run `/create-dungeon <dungeon name>` to create a new dungeon.
  - Then build a little area for your arena and do `/create-arena <dungeon name> <spawn radius>` with the same name as the last command. 
