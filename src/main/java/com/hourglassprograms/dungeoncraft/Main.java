@@ -31,7 +31,7 @@ import org.bukkit.scoreboard.Team;
 
 public class Main extends JavaPlugin implements Listener {
     // Array of all the arenas loaded into memory from the config
-    ArrayList<Arena> _currentArenas = new ArrayList<Arena>();
+    static ArrayList<Arena> _currentArenas = new ArrayList<Arena>();
     // Array of all parties
     ArrayList<Party> _parties = new ArrayList<Party>();
 
@@ -44,6 +44,8 @@ public class Main extends JavaPlugin implements Listener {
 
         getLogger().info("Dungeon Craft has loaded");
         getServer().getPluginManager().registerEvents(this, this);
+
+        getCommand("start-dungeon").setTabCompleter(new CommandTabCompleter());
 
         killAllUnused();
 
