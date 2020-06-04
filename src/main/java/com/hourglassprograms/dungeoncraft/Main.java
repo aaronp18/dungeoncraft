@@ -46,6 +46,7 @@ public class Main extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(this, this);
 
         getCommand("start-dungeon").setTabCompleter(new CommandTabCompleter());
+        getCommand("party").setTabCompleter(new CommandTabCompleter());
 
         killAllUnused();
 
