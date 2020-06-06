@@ -77,3 +77,9 @@ Remaining Enemies:
 Difficulty:
 
 mvn clean compile  assembly:single
+
+players:
+  BurntWindow:
+    Dung1:
+      last: 957432984802433
+    

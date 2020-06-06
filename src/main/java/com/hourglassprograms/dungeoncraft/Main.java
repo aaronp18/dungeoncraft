@@ -1,6 +1,7 @@
 package com.hourglassprograms.dungeoncraft;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
@@ -199,17 +200,27 @@ public class Main extends JavaPlugin implements Listener {
                             Integer index = getPartyIndex(player);
                             // Checks if is leader
                             if (isPartyLeader(player, index)) {
-                                // Is leader
-                                startDungeon(args[0], args[1], _parties.get(index).members);
+                                // Therefore is leader
+                                // Checks if the cooldown has passed
+                                if (!hasCooldown(player, args[0], true)) {
+                                    updateCooldown(player, args[0]);
+                                    startDungeon(args[0], args[1], _parties.get(index).members);
+
+                                }
+
                             } else {
                                 player.sendMessage(ChatColor.RED + "Only the party leader can start dungeons...");
                             }
                         } else {
-                            // Is just him
-                            // So makes his own players
-                            ArrayList<Player> players = new ArrayList<Player>();
-                            players.add(player);
-                            startDungeon(args[0], args[1], players);
+                            // Checks player doesnt have a cooldown
+                            if (!hasCooldown(player, args[0], true)) {
+                                // Is just him
+                                // So makes his own players
+                                updateCooldown(player, args[0]);
+                                ArrayList<Player> players = new ArrayList<Player>();
+                                players.add(player);
+                                startDungeon(args[0], args[1], players);
+                            }
                         }
 
                         // Creates new dungeon config
@@ -743,7 +754,7 @@ public class Main extends JavaPlugin implements Listener {
         FileConfiguration config = this.getConfig();
 
         // Number of waves to be generated
-        ;
+
         config.set(prefix + "wave-count", waveCount);
         config.set(prefix + "dungeon-id", UUID.randomUUID().toString());
 
@@ -760,6 +771,8 @@ public class Main extends JavaPlugin implements Listener {
         config.set(prefix + "rewards." + "command." + "count", 1);
         config.set(prefix + "rewards." + "command." + "spread", false);
         config.set(prefix + "rewards." + "command." + "command", "give $player$ stone $count$");
+
+        config.set(prefix + "cooldown", 7200000);
 
         this.saveConfig();
 
@@ -1058,6 +1071,7 @@ public class Main extends JavaPlugin implements Listener {
 
     }
 
+    // * Updates the scoreboard with the current information
     private void updateScoreboard(Arena arena) {
         arena.scoreboard.getTeam("waveCounter").setPrefix(
                 ChatColor.GOLD + Integer.toString(arena.currentWave) + " / " + Integer.toString(arena.totalWaves));
@@ -1102,6 +1116,7 @@ public class Main extends JavaPlugin implements Listener {
         }
     }
 
+    // * Gives each player the loot they require
     public void giveLoot(Arena arena) {
         // Gets loot config
         FileConfiguration config = this.getConfig();
@@ -1188,4 +1203,75 @@ public class Main extends JavaPlugin implements Listener {
 
     }
 
+    // * Checks if the player has a cooldown currently
+    private boolean hasCooldown(Player player, String dungeonName, boolean notifyPlayer) {
+        // Load config
+        FileConfiguration config = this.getConfig();
+        // Checks that the player has a listing
+        if (config.contains("players." + player.getName())) {
+            // Iterate through each player to find player
+            ConfigurationSection playerConfig = config.getConfigurationSection("players." + player.getName());
+            // Iterate through dungeons
+            // Checks if the config has .last
+            if (playerConfig.contains(dungeonName + ".last")) {
+                // Get cooldown for dungeon
+                if (config.contains("dungeons." + dungeonName + ".cooldown")) {
+                    Integer cooldown = config.getInt("dungeons." + dungeonName + ".cooldown");
+
+                    Integer last = playerConfig.getInt(dungeonName + ".last");
+                    Long timeDifference = (System.currentTimeMillis() - last);
+                    if (timeDifference >= cooldown) {
+                        // Therefore cooldwon has expired
+                        return false;
+                    } else {
+                        if (notifyPlayer) {
+                            // Notifies player that they still have a cooldown
+                            Long timeLeft = cooldown - timeDifference;
+                            // Double hours = (double) timeLeft / (1000 * 60 * 60);
+                            // Double minutes = (double) (timeLeft % (1000 * 60 * 60)) / (1000 * 60);
+                            // Double seconds = (double) ((timeLeft % (1000 * 60 * 60)) % (1000 * 60)) /
+                            // 1000;
+                            String convert = String.format("You have %d hour(s), %d minute(s), and %d second(s)",
+                                    timeLeft / (1000 * 60 * 60), (timeLeft % (1000 * 60 * 60)) / (1000 * 60),
+                                    ((timeLeft % (1000 * 60 * 60)) % (1000 * 60)) / 1000);
+                            player.sendMessage(ChatColor.RED + "Sorry, you have to wait " + convert);
+                            // Date.now - last date >= dungeon cooldown
+
+                            // If is admin, then notify but still return false;
+                        }
+                        if (player.hasPermission("dungeoncraft.cooldown.bypass")) {
+                            // Has bypass
+                            player.sendMessage(
+                                    ChatColor.GOLD + "You have the bypass permission so the cooldown has no effect...");
+                            return false;
+                        }
+                        return true;
+                    }
+
+                }
+
+            }
+
+        }
+
+        return false;
+    }
+
+    // * Updates the cooldown
+    private void updateCooldown(Player player, String dungeonName) {
+        FileConfiguration config = this.getConfig();
+        // Checks if dungeon exsits
+        if (config.contains("dungeons." + dungeonName)) {
+
+            // Find / create player
+            // Find / add dungeonName
+
+            // With current time
+            config.set("players." + player.getName() + "." + dungeonName + ".last", System.currentTimeMillis());
+
+            // Save
+            saveConfig();
+        }
+
+    }
 }
