@@ -1209,19 +1209,23 @@ public class Main extends JavaPlugin implements Listener {
         FileConfiguration config = this.getConfig();
         // Checks that the player has a listing
         if (config.contains("players." + player.getName())) {
+
             // Iterate through each player to find player
             ConfigurationSection playerConfig = config.getConfigurationSection("players." + player.getName());
             // Iterate through dungeons
             // Checks if the config has .last
             if (playerConfig.contains(dungeonName + ".last")) {
                 // Get cooldown for dungeon
-                if (config.contains("dungeons." + dungeonName + ".cooldown")) {
-                    Integer cooldown = config.getInt("dungeons." + dungeonName + ".cooldown");
 
-                    Integer last = playerConfig.getInt(dungeonName + ".last");
+                if (config.contains("dungeons." + dungeonName + ".cooldown")) {
+                    Long cooldown = config.getLong("dungeons." + dungeonName + ".cooldown");
+
+                    Long last = playerConfig.getLong(dungeonName + ".last");
                     Long timeDifference = (System.currentTimeMillis() - last);
+
                     if (timeDifference >= cooldown) {
-                        // Therefore cooldwon has expired
+                        // Therefore cooldown has expired
+
                         return false;
                     } else {
                         if (notifyPlayer) {
@@ -1231,10 +1235,11 @@ public class Main extends JavaPlugin implements Listener {
                             // Double minutes = (double) (timeLeft % (1000 * 60 * 60)) / (1000 * 60);
                             // Double seconds = (double) ((timeLeft % (1000 * 60 * 60)) % (1000 * 60)) /
                             // 1000;
-                            String convert = String.format("You have %d hour(s), %d minute(s), and %d second(s)",
+                            String convert = String.format(
+                                    "Sorry, you have a cool down of %d hour(s), %d minute(s), and %d second(s) before you can play this.",
                                     timeLeft / (1000 * 60 * 60), (timeLeft % (1000 * 60 * 60)) / (1000 * 60),
                                     ((timeLeft % (1000 * 60 * 60)) % (1000 * 60)) / 1000);
-                            player.sendMessage(ChatColor.RED + "Sorry, you have to wait " + convert);
+                            player.sendMessage(ChatColor.RED + convert);
                             // Date.now - last date >= dungeon cooldown
 
                             // If is admin, then notify but still return false;
