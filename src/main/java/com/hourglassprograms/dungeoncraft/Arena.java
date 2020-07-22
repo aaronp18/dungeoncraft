@@ -15,6 +15,7 @@ public class Arena {
     Integer remainingEnemies = 0;
     Integer spawnRadius = 10;
     Boolean isWaiting = false;
+    Boolean keepInv = true;
     Double difficultyMultiplyer = 1.0;
     ArrayList<Player> players = null;
     Scoreboard scoreboard;

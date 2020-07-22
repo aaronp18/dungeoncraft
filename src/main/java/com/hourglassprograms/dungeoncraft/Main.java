@@ -82,6 +82,32 @@ public class Main extends JavaPlugin implements Listener {
         }
     }
 
+    // * Listener for when players die so keep inv can be turned on
+    // they are in one
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+
+        Player player = event.getEntity();
+
+        for (Arena arena : _currentArenas) {
+            if (arena.players != null) {
+                for (Player p : arena.players) {
+                    if (p.getName().equals(player.getName())) {
+                        if (arena.keepInv) {
+                            event.setKeepLevel(true);
+                            event.setKeepInventory(true);
+                            // Clears dropped items and xp
+                            event.setDroppedExp(0);
+                            event.getDrops().clear();
+                        }
+
+                    }
+                }
+
+            }
+        }
+    }
+
     // * Listener for when players respawn so they can be tped back to the arena if
     // they are in one
     @EventHandler
@@ -705,6 +731,7 @@ public class Main extends JavaPlugin implements Listener {
             String prefix = "arenas." + arenaID + "."; // Make multiple arenas per dungeon
             config.set(prefix + "dungeon-name", dungeonName);
             config.set(prefix + "radius", radius);
+
             // Gets location
             Location locale = player.getLocation();
 
@@ -726,6 +753,7 @@ public class Main extends JavaPlugin implements Listener {
             newArena.totalWaves = config.getInt("dungeons." + newArena.dungeonName + ".wave-count");
             newArena.remainingEnemies = 0;
             newArena.spawnRadius = radius;
+            newArena.keepInv = config.getBoolean("dungeons." + newArena.dungeonName + ".keepinv");
 
             // Sets up scoreboard for arena
             ScoreboardManager manager = Bukkit.getScoreboardManager();
@@ -799,6 +827,7 @@ public class Main extends JavaPlugin implements Listener {
         config.set(prefix + "rewards." + "command." + "spread", false);
         config.set(prefix + "rewards." + "command." + "command", "give $player$ stone $count$");
 
+        config.set(prefix + "keepinv", true);
         config.set(prefix + "cooldown", 7200000);
 
         this.saveConfig();
@@ -996,6 +1025,7 @@ public class Main extends JavaPlugin implements Listener {
                 newArena.totalWaves = config.getInt("dungeons." + newArena.dungeonName + ".wave-count");
                 newArena.remainingEnemies = 0;
                 newArena.spawnRadius = arenas.getInt(id + ".radius");
+                newArena.keepInv = config.getBoolean("dungeons." + newArena.dungeonName + ".keepinv");
 
                 // Sets up scoreboard for arena
                 newArena.scoreboard = manager.getNewScoreboard();
