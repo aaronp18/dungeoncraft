@@ -20,9 +20,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
@@ -74,6 +77,30 @@ public class Main extends JavaPlugin implements Listener {
                 // Then update remaining num
 
                 updateRemaining();
+
+            }
+        }
+    }
+
+    // * Listener for when players respawn so they can be tped back to the arena if
+    // they are in one
+    @EventHandler
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+
+        Player player = event.getPlayer();
+        for (Arena arena : _currentArenas) {
+            if (arena.players != null) {
+                for (Player p : arena.players) {
+                    if (p.getName().equals(player.getName())) {
+                        // Teleports to the center of the arena
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                player.teleport(arena.centerLocation);
+                            }
+                        }.runTaskLater(this, 1L);
+                    }
+                }
 
             }
         }
