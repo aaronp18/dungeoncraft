@@ -35,6 +35,7 @@ This means that you can design 1 **Dungeon** with a set of custom waves which ca
  - To give them a specific item, simply write its name as the title, the amount you want to give the player and wether you want it spread amongst other players or to give them each the specified amount.
  - To execute a command, simply give the `reward` the name `command` and add the `command` field.
  - This will mean that the game will execute the given command for each player. Simply replace the player name of a command with `$player$` and `$count$` with the number (if needed).
+ - By default players keep their inventory when they die if they are in an arena, however you can turn this off by changing "keepinv" to false.
  - Once you have finished with configuring, simply do `/dc-reload` to load the new config onto the server.
  
  ## Commands:
