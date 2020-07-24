@@ -25,6 +25,8 @@ This means that you can design 1 **Dungeon** with a set of custom waves which ca
  - Then go into your server and run `/create-dungeon <dungeon name>` to create a new dungeon.
  - Then build a little area for your arena and do `/create-arena <dungeon name> <spawn radius>` with the same name as the last command. 
  The spawn radius should be atleast a couple of blocks smaller than your area to prevent mobs from spawning outside it and making them unkillable.
+ 
+ To remove the "\[Server: Summoned new Zombie]" on mob spawns which spams the chat of operators, run `/gamerule sendCommandFeedback false`.
  #### Dungeon Config
  - Then go open the `config.yml` in the `plugins/dungeoncraft` folder. This will contain all of the information about the waves etc.
  - To add another mob to a wave, simply copy the pre existing "zombie" and paste below it.
@@ -44,6 +46,7 @@ This means that you can design 1 **Dungeon** with a set of custom waves which ca
  - `/arenas` - Simply lists all the arenas that have been made along with their location and current status. Permission required:  `(dungeoncraft.arenas.list)`
  - `/start-dungeon <dungeon name> <difficulty (easy / hard)>` - Starts a dungeon with the current members in the party if you are the party leader. Permission required:  `(dungeoncraft.start)`
  - `/dc-reload` - Used to reload the config into the game. This will reset any game in progress so be careful! Permission required:  `(dungeoncraft.reload)`
+ - `/gamerule sendCommandFeedback false` - This will remove the "\[Server: Summoned new Zombie]" when spawning mobs
  
  #### Parties: 
  ###### Permission required:  `(dungeoncraft.party)`
