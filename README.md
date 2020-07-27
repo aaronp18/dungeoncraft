@@ -45,7 +45,7 @@ This means that you can design 1 **Dungeon** with a set of custom waves which ca
  - `/create-arena <dungeon name> [spawn radius]` - Used to create a new arena from the players current position. This location will then be linked to the Dungeon inputted. The spawn radius (default: 10) changes the radius at which mobs spawn. Permission required: `(dungeoncraft.arenas.create)`
  - `/arenas` - Simply lists all the arenas that have been made along with their location and current status. Permission required:  `(dungeoncraft.arenas.list)`
  - `/start-dungeon <dungeon name> <difficulty (easy / hard)>` - Starts a dungeon with the current members in the party if you are the party leader. Permission required:  `(dungeoncraft.start)`
- - `/leave-dungeon` - Causes the player to leave the current dungeon and teleports them to their bed or the world spawn.
+ - `/leave-dungeon` - Causes the player to leave the current dungeon and teleports them to their bed or the world spawn. Permission required:  `(dungeoncraft.leave)`
  - `/dc-reload` - Used to reload the config into the game. This will reset any game in progress so be careful! Permission required:  `(dungeoncraft.reload)`
  - `/gamerule sendCommandFeedback false` - This will remove the "\[Server: Summoned new Zombie]" when spawning mobs
  
