@@ -1,7 +1,6 @@
 package com.hourglassprograms.dungeoncraft;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
@@ -138,6 +137,13 @@ public class Main extends JavaPlugin implements Listener {
         // Called when a player leaves a server
         Player player = event.getPlayer();
         // Removes iteself from an arena member list
+        removeFromArena(player);
+
+        // Removes from party
+        partyLeave(player);
+    }
+
+    public void removeFromArena(Player player) {
         for (Arena arena : _currentArenas) {
             boolean toRemove = false;
             if (arena.players != null) {
@@ -160,9 +166,6 @@ public class Main extends JavaPlugin implements Listener {
                 }
             }
         }
-
-        // Removes from party
-        partyLeave(player);
     }
 
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -286,6 +289,25 @@ public class Main extends JavaPlugin implements Listener {
 
                 } else {
                     player.sendMessage(ChatColor.BOLD + "You do not have the perms to do this");
+                    return true;
+                }
+
+            }
+            // * Leaves dungeon
+            else if (cmd.getName().equalsIgnoreCase("leave-dungeon")) {
+                if (player.hasPermission("dungeoncraft.leave")) { // Must have permission
+                    // Removes iteself from an arena member list
+                    removeFromArena(player);
+
+                    // Teleports player to bed spawn
+                    teleportPlayerHome(player);
+
+                    // Remove scoreboard from player
+                    player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+                    return true;
+
+                } else {
+                    player.sendMessage(ChatColor.BOLD + "You do not have the permission to do this");
                     return true;
                 }
 
@@ -474,7 +496,7 @@ public class Main extends JavaPlugin implements Listener {
                                     // Checks if they are already in the party
                                     else if (isInParty(invitedPlayer)) {
                                         player.sendMessage(
-                                                ChatColor.RED + "Player \"" + args[1] + "\" already in the party");
+                                                ChatColor.RED + "Player \"" + args[1] + "\" is already in the party");
                                     }
                                     // Means that the player isnt in the party or invited yet
                                     else {
@@ -1114,6 +1136,14 @@ public class Main extends JavaPlugin implements Listener {
                                 + arena.dungeonName + "!!!");
                         player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "Here is your prize, well done");
                         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+                        // Teleport player home after 10 seconds
+                        getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                            @Override
+                            public void run() {
+                                // Teleport home
+                                teleportPlayerHome(player);
+                            }
+                        }, 100L);
 
                     }
                     giveLoot(arena);
@@ -1334,6 +1364,19 @@ public class Main extends JavaPlugin implements Listener {
             // Save
             saveConfig();
         }
+
+    }
+
+    // * Teleports player to bed spawn or world spawn
+    public void teleportPlayerHome(Player player) {
+        Location teleportLocation;
+        if (player.getBedSpawnLocation() != null) {
+            teleportLocation = player.getBedSpawnLocation();
+        } else {
+            // or to world spawn
+            teleportLocation = player.getWorld().getSpawnLocation();
+        }
+        player.teleport(teleportLocation);
 
     }
 }

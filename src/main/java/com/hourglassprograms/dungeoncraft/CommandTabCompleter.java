@@ -3,8 +3,6 @@ package com.hourglassprograms.dungeoncraft;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hourglassprograms.dungeoncraft.*;
-
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -16,7 +14,6 @@ public class CommandTabCompleter implements TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (sender instanceof Player) {
-            Player player = (Player) sender;
 
             // * Start dungeon filelr
             if (command.getName().equalsIgnoreCase("start-dungeon") && args.length == 1) {

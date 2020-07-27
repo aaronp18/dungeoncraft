@@ -1,6 +1,6 @@
 main: com.hourglassprograms.dungeoncraft.Main
 name: DungeonCraft
-version: 1.0.6
+version: 1.0.7
 author: Hourglass Programs
 api-version: 1.15
 commands:
@@ -24,6 +24,11 @@ commands:
     permission: dungeoncraft.start
     permission-message: You do not have permission to use this command.
     usage: "Usage: /<command> <dungeon name> <difficulty>"
+  leave-dungeon:
+    description: "Use this to leave a dungeon"
+    permission: dungeoncraft.leave
+    permission-message: You do not have permission to use this command.
+    usage: "Usage: /<command>"
   dc-reload:
     description: "Use this to reload config"
     permission: dungeoncraft.reload
