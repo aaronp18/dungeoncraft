@@ -37,7 +37,7 @@ This means that you can design 1 **Dungeon** with a set of custom waves which ca
  - To give them a specific item, simply write its name as the title, the amount you want to give the player and wether you want it spread amongst other players or to give them each the specified amount.
  - To execute a command, simply give the `reward` the name `command` and add the `command` field.
  - This will mean that the game will execute the given command for each player. Simply replace the player name of a command with `$player$` and `$count$` with the number (if needed).
- - By default players keep their inventory when they die if they are in an arena, however you can turn this off by changing "keepinv" to false.
+ - By default players keep their inventory when they die if they are in an arena, however you can turn this off by changing `keepinv` to false.
  - Once you have finished with configuring, simply do `/dc-reload` to load the new config onto the server.
  
  ## Commands:
@@ -45,6 +45,7 @@ This means that you can design 1 **Dungeon** with a set of custom waves which ca
  - `/create-arena <dungeon name> [spawn radius]` - Used to create a new arena from the players current position. This location will then be linked to the Dungeon inputted. The spawn radius (default: 10) changes the radius at which mobs spawn. Permission required: `(dungeoncraft.arenas.create)`
  - `/arenas` - Simply lists all the arenas that have been made along with their location and current status. Permission required:  `(dungeoncraft.arenas.list)`
  - `/start-dungeon <dungeon name> <difficulty (easy / hard)>` - Starts a dungeon with the current members in the party if you are the party leader. Permission required:  `(dungeoncraft.start)`
+ - `/leave-dungeon` - Causes the player to leave the current dungeon and teleports them to their bed or the world spawn.
  - `/dc-reload` - Used to reload the config into the game. This will reset any game in progress so be careful! Permission required:  `(dungeoncraft.reload)`
  - `/gamerule sendCommandFeedback false` - This will remove the "\[Server: Summoned new Zombie]" when spawning mobs
  
